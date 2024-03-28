@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 3.14)
+
+set(CMAKE_AUTOMOC OFF)
+set(CMAKE_AUTOUIC OFF)
+set(CMAKE_AUTORCC OFF)
+set(CMAKE_AUTOUIC_SEARCH_PATHS "")
+
+message(STATUS "BullsAndCows:" "CMAKE_CURRENT_LIST_DIR: ${CMAKE_CURRENT_LIST_DIR}")
+
+set(sources "")
+file(
+        GLOB_RECURSE
+
+        sources
+
+        "${CMAKE_CURRENT_LIST_DIR}/*.h"
+        "${CMAKE_CURRENT_LIST_DIR}/*.hpp"
+        "${CMAKE_CURRENT_LIST_DIR}/*.cpp"
+)
+
+add_library( ${MODEL_TARGET_NAME} SHARED ${sources} )
+
+if (DEFINED CMAKE_PROJECT_VERSION)
+        set_target_properties(${MODEL_TARGET_NAME} PROPERTIES VERSION ${CMAKE_PROJECT_VERSION})
+        set_target_properties(${MODEL_TARGET_NAME} PROPERTIES SOVERSION ${CMAKE_PROJECT_VERSION})
+        set_target_properties(${MODEL_TARGET_NAME} PROPERTIES DLL_NAME_WITH_SOVERSION ${CMAKE_PROJECT_VERSION})
+    endif ()
+
+install(TARGETS ${MATH_MODEL_TARGET_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+

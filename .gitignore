@@ -1,0 +1,84 @@
+.tmp/
+bin/
+debug/
+release/
+.logs/
+seeds/
+.seeds/
+reports/
+.reports/
+.dmp/
+.settings/
+.toDebug/
+.toCalc/
+?exchange/
+
+~$*.*
+Makefile
+Makefile.*
+
+CMakeLists.txt.*
+
+*.core
+*.dmp
+*.stash
+
+*seeds.xml
+simulation_config.xml
+demo_prize_table.xml
+seeds_storage.xml
+average_prizes.xml
+seeds.xml
+seeds-test-paytable.xml
+
+#jetbrains IDE files
+.idea/
+
+#eclipse IDE files
+.cproject
+.project
+*.cproject
+*.project
+.settings/
+language.settings.xml
+.externalToolBuilders/
+*.launch
+
+#Qt generated files
+ui_*.h
+*.pro.user*
+object_script.*
+
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
