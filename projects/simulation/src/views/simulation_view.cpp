@@ -25,8 +25,8 @@ TSimulationView::TSimulationView( QWidget* _parent )
     QObject::connect(
         &m_threadSimulation,
         SIGNAL( UpdateProgressBar(int) ),
-        ui.progressBar,
-        SLOT( setValue(int) )
+        this,
+        SLOT( onUpdateStatistic(int) )
     );
 
     QObject::connect(
@@ -68,6 +68,12 @@ void TSimulationView::OnInitialUpdate( )
     {
         ui.brainComboBox->addItem(gameBrain);
     }
+}
+
+void TSimulationView::onUpdateStatistic( int percent )
+{
+    ui.progressBar->setValue( percent );
+    fillStatisticTable(percent);
 }
 
 void TSimulationView::onSimulationButton( )
@@ -124,7 +130,7 @@ void TSimulationView::stopSimulate( )
 void TSimulationView::onSimulateFinish( )
 {
     std::cout << "===> " << __PRETTY_FUNCTION__ << std::endl;
-    fillStatisticTable();
+    fillStatisticTable(100);
     m_threadSimulation.wait( 1000 );
 
     QMessageBox messageOk;
@@ -135,19 +141,22 @@ void TSimulationView::onSimulateFinish( )
     std::cout << __PRETTY_FUNCTION__  << " ===>" << std::endl;
 }
 
-void TSimulationView::fillStatisticTable()
+void TSimulationView::fillStatisticTable( int percent )
 {
+    ui.resultsTable->clearContents();
+    ui.resultsTable->setRowCount(0);
     uint64_t movesAmountSumm = 0;
+    uint64_t gamesAmount = m_threadSimulation.StartsAmount() * percent / 100;
     for( auto const & item : m_threadSimulation.StatisticAttempts())
     {
         ui.resultsTable->setRowCount(ui.resultsTable->rowCount() + 1);
         ui.resultsTable->setItem(ui.resultsTable->rowCount() - 1, 0, createTableItem(QString("%1").arg(item.first)));
         ui.resultsTable->setItem(ui.resultsTable->rowCount() - 1, 1, createTableItem(QString("%1").arg(
-            static_cast<double>(item.second)/m_threadSimulation.StartsAmount()
+            static_cast<double>(item.second) / gamesAmount
         )));
-        movesAmountSumm += item.first;
+        movesAmountSumm += item.first * item.second;
     }
-    ui.avgMovesAmount->setText(QString("%1").arg(static_cast<double>(movesAmountSumm)/m_threadSimulation.StartsAmount()));
+    ui.avgMovesAmount->setText(QString("%1").arg(static_cast<double>(movesAmountSumm)/gamesAmount));
     ui.resultFrame->setVisible(true);
 }
 

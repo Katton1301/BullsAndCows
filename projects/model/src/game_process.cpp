@@ -37,14 +37,14 @@ void TStandartGameProcess::Init()
     m_historyList.clear();
 }
 
-std::shared_ptr<IGameBrain> TStandartGameProcess::GameBrain_ptr()
+std::shared_ptr<TStandartBrain> TStandartGameProcess::GameBrain_ptr()
 {
     return m_gameBrain;
 }
 
 void TStandartGameProcess::selectBrain( MODEL_COMPONENTS::TGameBrain _gameBrain )
 {
-    m_gameBrain = createBrain(this, _gameBrain);
+    m_gameBrain = createStandartBrain( this, _gameBrain);
 }
 
 TStandartGameProcess::THistoryList const & TStandartGameProcess::HistoryList( ) const
@@ -85,6 +85,8 @@ void TStandartGameProcess::makeStep( )
     assert(GameStage() == MODEL_COMPONENTS::TGameStage::IN_PROGRESS);
     assert(GameBrain_ptr());
     GameBrain_ptr()->makePredict();
+    assert(GameBrain_ptr()->PredictedValue_cptr());
+    appendGameValue(*GameBrain_ptr()->PredictedValue_cptr());
     if(TStandartRules::Instance()->isWinResults(HistoryList().back().second))
     {
         setGameStage(MODEL_COMPONENTS::TGameStage::FINISHED);
@@ -92,7 +94,7 @@ void TStandartGameProcess::makeStep( )
 
 }
 
-std::function< uint32_t( uint32_t ) > const & TStandartGameProcess::RandomByModulus()
+std::function< uint32_t( uint32_t ) > const & TStandartGameProcess::RandomByModulus() const
 {
     return m_randomByModulus;
 }

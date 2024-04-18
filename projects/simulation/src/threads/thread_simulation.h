@@ -1,6 +1,6 @@
 #pragma once
-#include "enums.hpp"
-#include "elements/game_process.hpp"
+#include "core/enums.hpp"
+#include "game_process.hpp"
 
 #include <QtCore/QThread>
 

@@ -1,4 +1,4 @@
-#include "game_rules.hpp"
+#include "standart_rules.hpp"
 
 TStandartRules* TStandartRules::m_standartRules = nullptr;
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "enums.hpp"
-#include "game_rules.hpp"
-#include "game_brain.hpp"
+#include "core/enums.hpp"
+#include "rules/standart_rules.hpp"
+#include "brains/standart_brain.hpp"
 #include <random>
 
 class TGameProcessBase
@@ -35,14 +35,14 @@ public: //methods
     void setTrueGameValue( TGameValue<uint8_t> const & _gameValue );
     void appendGameValue( TGameValue<uint8_t> const & _gameValue );
     void makeStep( );
-    std::function< uint32_t( uint32_t ) > const & RandomByModulus();
+    std::function< uint32_t( uint32_t ) > const & RandomByModulus() const;
 private:
-    std::shared_ptr<IGameBrain> GameBrain_ptr();
+    std::shared_ptr<TStandartBrain> GameBrain_ptr();
 
 private:
     std::mt19937 random_generator_;
     std::function< uint32_t( uint32_t ) > m_randomByModulus;
     THistoryList m_historyList{};
     TGameValue<uint8_t> *m_trueGameValue = nullptr;
-    std::shared_ptr<IGameBrain> m_gameBrain = nullptr;
+    std::shared_ptr<TStandartBrain> m_gameBrain = nullptr;
 };

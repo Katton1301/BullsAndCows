@@ -21,13 +21,14 @@ public:
 
 public slots :
     void onSimulationButton( );
+    void onUpdateStatistic( int percent );
     void onSimulateFinish( );
 
 private :
 //methods
     void startSimulate();
     void stopSimulate();
-    void fillStatisticTable();
+    void fillStatisticTable( int percent );
     std::vector<QString> generateGameBrainsList() const;
 
 //attributes

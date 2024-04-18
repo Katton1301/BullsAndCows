@@ -48,6 +48,10 @@ namespace MODEL_COMPONENTS
                 stream_ << "STUPID";
                 break;
 
+            case TGameBrain::SMART  :
+                stream_ << "SMART";
+                break;
+
             default :
                 stream_ << "[Error] identifier of game brain is wrong : " << static_cast< int32_t >( _gameBrain ) << std::endl;
                 assert( false && " incorrect game brain identifier" );
