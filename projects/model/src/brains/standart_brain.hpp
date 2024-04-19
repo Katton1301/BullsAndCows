@@ -68,14 +68,7 @@ public:
     virtual void makePredict( ) override;
 protected:
     virtual int32_t chooseBestGameValueOffset() override;
-    void handleHistoryDigits();
-    void leaveValuesForDigitInPos( uint8_t digit, uint32_t pos );
-    void eraseValuesForDigitInPos( uint8_t digit, uint32_t pos );
     void checkValuesByHistoryList();
-
-protected:
-    std::map<uint8_t, uint32_t> m_digitsPlaces{};
-
 };
 
 std::shared_ptr<TStandartBrain> createStandartBrain( TStandartGameProcess const * _gameProcess, MODEL_COMPONENTS::TGameBrain _gameBrain );

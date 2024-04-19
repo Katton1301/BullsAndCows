@@ -261,17 +261,12 @@ void TStandartSmartBrain::Init()
 void TStandartSmartBrain::makePredict()
 {
     assert(m_possibleValues.size() > 0);
-    if(m_gameProcess_cptr->HistoryList().size() > 0 )
-    {
-        handleHistoryDigits( );
-        if(m_gameProcess_cptr->HistoryList().size() > 1)
-        {
-            checkValuesByHistoryList( );
-        }
-    }
-
     int32_t chosen_value_offset = -1;
-    if(m_gameProcess_cptr->HistoryList().size() < 2) //collect information
+    if( m_gameProcess_cptr->HistoryList().size() > 0 )
+    {
+        checkValuesByHistoryList( );
+    }
+    else //collect information
     {
         chosen_value_offset = chooseFirstAndSecondGameValueIndex();
     }
@@ -289,200 +284,65 @@ void TStandartSmartBrain::makePredict()
     m_possibleValues.erase( m_possibleValues.begin() + chosen_value_offset );
 }
 
-void TStandartSmartBrain::leaveValuesForDigitInPos( uint8_t digit, uint32_t pos )
-{
-    auto it = m_possibleValues.begin();
-    while( it != m_possibleValues.end() )
-    {
-        if( it->List().at(pos) != digit )
-        {
-            it = m_possibleValues.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-}
-
-void TStandartSmartBrain::eraseValuesForDigitInPos( uint8_t digit, uint32_t pos )
-{
-    auto it = m_possibleValues.begin();
-    while( it != m_possibleValues.end() )
-    {
-        if( it->List().at(pos) == digit )
-        {
-            it = m_possibleValues.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-}
-
-void TStandartSmartBrain::handleHistoryDigits()
-{
-    m_digitsPlaces.clear();
-
-    for(uint8_t i = 0; i < TStandartRules::Instance()->NumbersCount(); ++i)
-    {
-        m_digitsPlaces.emplace(std::make_pair(i, std::pow(2, TStandartRules::Instance()->ValueSize()) - 1));
-    }
-    for(auto const & historyItem : m_gameProcess_cptr->HistoryList())
-    {
-        if(historyItem.second.first == 0)
-        {
-            for(uint32_t posNo = 0; posNo < TStandartRules::Instance()->ValueSize(); ++posNo)
-            {
-                auto digit = historyItem.first.List().at(posNo);
-                if(historyItem.second.second == 0)
-                {
-                    m_digitsPlaces.at(digit) = 0;
-                }
-                else
-                {
-                    uint32_t posCost = std::pow(2,(TStandartRules::Instance()->ValueSize()-posNo));
-                    if(
-                        (m_digitsPlaces.at(digit) % posCost)
-                        >>
-                        (TStandartRules::Instance()->ValueSize() - posNo - 1)
-                    )
-                    {
-                        m_digitsPlaces.at(digit) -= std::pow(2,(TStandartRules::Instance()->ValueSize()-posNo-1));
-                    }
-                }
-            }
-        }
-    }
-
-    for(auto const & historyItem : m_gameProcess_cptr->HistoryList())
-    {
-        if(historyItem.second.first > 0)
-        {
-            std::vector<uint8_t> availableDigitsList;
-            std::copy_if(
-                        historyItem.first.List().begin(),
-                        historyItem.first.List().end(),
-                        std::back_inserter(availableDigitsList),
-                        [this](auto digit)
-                        {
-                            return m_digitsPlaces.at(digit) > 0;
-                        }
-                    );
-
-            if(historyItem.second.first + historyItem.second.second == availableDigitsList.size())
-            {
-                if(historyItem.second.second == 0)
-                {
-                    for(uint32_t posNo = 0; posNo < TStandartRules::Instance()->ValueSize(); ++posNo)
-                    {
-                        auto digit = historyItem.first.List().at(posNo);
-                        if(m_digitsPlaces.at(digit) > 0)
-                        {
-                            m_digitsPlaces.at(digit) = std::pow(2,(TStandartRules::Instance()->ValueSize()-posNo-1));
-                        }
-                    }
-                }
-                else
-                {
-                    leaveValuesForDigits(availableDigitsList);
-                }
-            }
-        }
-    }
-
-    std::vector<uint8_t> removedDigits;
-    for(auto & digitPlaces : m_digitsPlaces)
-    {
-        if(digitPlaces.second == 0)
-        {
-            removedDigits.push_back(digitPlaces.first);
-        }
-    }
-    if(removedDigits.size() > 0)
-    {
-        eraseValuesForDigits(removedDigits);
-    }
-
-    for(auto & digitPlaces : m_digitsPlaces)
-    {
-        uint32_t digitsCost = digitPlaces.second;
-        uint32_t powRate = 1;
-        while(digitsCost > 1)
-        {
-            if(digitsCost % 2 == 0)
-            {
-                eraseValuesForDigitInPos(digitPlaces.first, TStandartRules::Instance()->ValueSize() - powRate );
-            }
-            digitsCost /= 2;
-            ++powRate;
-        }
-    }
-
-}
-
 int32_t TStandartSmartBrain::chooseBestGameValueOffset()
 {
-    std::map< uint8_t, std::pair< uint32_t, std::vector<bool> > > digitsPriorityList;
-    for(auto & digitPlaces : m_digitsPlaces)
+    int32_t chosen_value_offset = -1;
+    std::vector< std::vector< uint32_t > >
+        digitsCountInValues(
+            TStandartRules::Instance()->ValueSize(),
+            std::vector< uint32_t >(TStandartRules::Instance()->NumbersCount(), 0)
+        );
+
+    for(uint32_t value_offset = 0; value_offset < m_possibleValues.size(); ++value_offset)
     {
-        uint32_t digitsCost = digitPlaces.second;
-        uint32_t powRate = 1;
-        std::vector<bool> digitPlacesCost(TStandartRules::Instance()->ValueSize(), false);
-        uint32_t availablePlacesCount = 0;
-        while(digitsCost > 0)
+        for(uint32_t posNo = 0; posNo < m_possibleValues.at(value_offset).List().size(); ++posNo)
         {
-            if(digitsCost % 2 == 1)
-            {
-                digitPlacesCost.at(TStandartRules::Instance()->ValueSize() - powRate ) = true;
-                ++availablePlacesCount;
-            }
-            digitsCost /= 2;
-            ++powRate;
+            ++digitsCountInValues.at(posNo).at(m_possibleValues.at(value_offset).List().at(posNo));
         }
-        digitsPriorityList.emplace(digitPlaces.first, std::make_pair(availablePlacesCount, digitPlacesCost));
     }
 
     std::vector< std::vector<uint8_t> > sortDigitsList;
     for(uint32_t posNo = 0; posNo < TStandartRules::Instance()->ValueSize(); ++posNo)
     {
-        std::vector<uint8_t> digitsList;
-        std::map<uint32_t, std::vector<uint8_t> > digitsInPriority;
-        for(auto const & digitPriority : digitsPriorityList)
+        std::vector<uint8_t> sortedDigits;
+        while(true)
         {
-            if(digitPriority.second.second.at(posNo))
+            std::vector<uint8_t> bestDigits{};
+            uint32_t maxCount = 0;
+            for(uint8_t digit = 0; digit < digitsCountInValues.at(posNo).size(); ++digit)
             {
-                if(!digitsInPriority.contains(digitPriority.second.first))
+                if(maxCount <= digitsCountInValues.at(posNo).at(digit))
                 {
-                    digitsInPriority.emplace(digitPriority.second.first, std::vector<uint8_t>());
+                    if(maxCount < digitsCountInValues.at(posNo).at(digit))
+                    {
+                        maxCount = digitsCountInValues.at(posNo).at(digit);
+                        bestDigits.clear();
+                    }
+                    bestDigits.push_back(digit);
                 }
-                digitsInPriority.at(digitPriority.second.first).push_back(digitPriority.first);
             }
-        }
-        std::vector<uint32_t> digitsPriorityNumbers{4,1,3,2};
-        for(auto priority : digitsPriorityNumbers)
-        {
-            if(digitsInPriority.contains(priority))
+
+            if(maxCount == 0)
             {
-                while(digitsInPriority.at(priority).size() > 1)
+                break;
+            }
+            else
+            {
+                while(bestDigits.size() > 0)
                 {
                     std::swap(
-                        digitsInPriority.at(priority).at(m_gameProcess_cptr->RandomByModulus()(digitsInPriority.at(priority).size())),
-                        digitsInPriority.at(priority).back()
+                        bestDigits.at(m_gameProcess_cptr->RandomByModulus()(bestDigits.size())),
+                        bestDigits.back()
                     );
-                    digitsList.push_back(digitsInPriority.at(priority).back());
-                    digitsInPriority.at(priority).pop_back();
+                    digitsCountInValues.at(posNo).at(bestDigits.back()) = 0;
+                    sortedDigits.push_back(bestDigits.back());
+                    bestDigits.pop_back();
                 }
-                digitsList.push_back(digitsInPriority.at(priority).back());
-                digitsInPriority.at(priority).pop_back();
             }
         }
-
-        sortDigitsList.push_back(digitsList);
+        sortDigitsList.push_back(sortedDigits);
     }
 
-    int32_t chosen_value_offset = -1;
     int32_t posNo = 0;
     std::vector<uint32_t> digitsNumbersList(TStandartRules::Instance()->ValueSize(), 0);
     std::vector<uint8_t> chosenGameValue;
@@ -542,6 +402,12 @@ int32_t TStandartSmartBrain::chooseBestGameValueOffset()
         }
 
     }
+
+    if(chosen_value_offset < 0)
+    {
+        chosen_value_offset = m_gameProcess_cptr->RandomByModulus()(m_possibleValues.size());
+    }
+
     return chosen_value_offset;
 }
 
