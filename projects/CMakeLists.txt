@@ -33,6 +33,7 @@ message(STATUS "[model] target name: ${MODEL_TARGET_NAME}")
 include(model/BullsAndCows.Model.cmake)
 include(game_view/BullsAndCows.GameView.cmake)
 include(simulation/BullsAndCows.Simulation.cmake)
+include(strategy_calculation/BullsAndCows.StrategyCalculation.cmake)
 #enable_testing()
 #add_subdirectory(tests)
 

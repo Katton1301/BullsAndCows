@@ -1,5 +1,4 @@
 #pragma once
-
 #include <string>
 
 namespace COMMON_OPERATIONS

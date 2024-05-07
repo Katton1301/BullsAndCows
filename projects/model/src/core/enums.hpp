@@ -20,6 +20,7 @@ namespace MODEL_COMPONENTS
         RANDOM = BEGIN,
         STUPID,
         SMART,
+        BEST,
         END,
     };
     std::ostream& operator<<( std::ostream& stream_, TGameBrain _gameBrain );

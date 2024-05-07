@@ -1,6 +1,7 @@
 #pragma once
 #include "core/enums.hpp"
 #include "game_process.hpp"
+#include "tools/time_profiler.hpp"
 
 #include <QtCore/QThread>
 
@@ -45,5 +46,8 @@ private:
     MODEL_COMPONENTS::TGameBrain m_gameBrain = MODEL_COMPONENTS::TGameBrain::UNKNOWN;
     uint64_t m_startsAmount;
     std::map<uint32_t, uint64_t> m_statisticAttempts{};
+
+    TTimeProfiler m_profilerGameProcess;
+    TTimeProfiler m_profilerGameStep;
 
 };

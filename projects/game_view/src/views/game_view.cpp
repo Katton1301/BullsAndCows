@@ -9,6 +9,27 @@ QTableWidgetItem * createTableItem(QString text)
     return item;
 }
 
+inline std::string GameBrainToLevelName( MODEL_COMPONENTS::TGameBrain _gameMode )
+{
+    switch ( _gameMode ) {
+        case MODEL_COMPONENTS::TGameBrain::RANDOM :
+            return std::string("Easiest");
+            break;
+        case MODEL_COMPONENTS::TGameBrain::STUPID :
+            return std::string("Easy");
+            break;
+        case MODEL_COMPONENTS::TGameBrain::SMART :
+            return std::string("Medium");
+            break;
+        case MODEL_COMPONENTS::TGameBrain::BEST :
+            return std::string("Hard");
+            break;
+        default :
+            return std::string("UNKNOWN");
+            break;
+    }
+}
+
 TGameView::TGameView( QWidget* _parent )
     : QWidget( _parent )
     , m_game_controller(new TGameController)
@@ -145,12 +166,20 @@ void TGameView::onSwitchGameMode([[maybe_unused]] int _currentIndex)
 
 void TGameView::onSwitchGameBrain([[maybe_unused]] int _currentIndex)
 {
-    MODEL_COMPONENTS::TGameBrain gameBrain = COMMON_OPERATIONS::convertFromStdString(
-                    ui.gameBrainComboBox->currentText().toStdString(),
-                    MODEL_COMPONENTS::TGameBrain::BEGIN,
-                    MODEL_COMPONENTS::TGameBrain::BEGIN,
-                    MODEL_COMPONENTS::TGameBrain::END
-                );
+
+    MODEL_COMPONENTS::TGameBrain gameBrain = MODEL_COMPONENTS::TGameBrain::BEGIN;
+    for (
+        uint32_t id  = static_cast< uint32_t >( MODEL_COMPONENTS::TGameBrain::BEGIN );
+        id != static_cast< uint32_t >( MODEL_COMPONENTS::TGameBrain::END );
+        ++id
+    )
+    {
+        if ( GameBrainToLevelName(static_cast< MODEL_COMPONENTS::TGameBrain >( id )) == ui.gameBrainComboBox->currentText().toStdString() )
+        {
+            gameBrain = static_cast< MODEL_COMPONENTS::TGameBrain >( id );
+            break;
+        }
+    }
     emit switchGameBrain(gameBrain);
 }
 
@@ -211,7 +240,7 @@ std::vector<QString> TGameView::generateGameBrainsList()  const
         ++gameBrainId
     )
     {
-        auto gameBrainStr = COMMON_OPERATIONS::convertToStdString(static_cast<MODEL_COMPONENTS::TGameBrain>(gameBrainId));
+        auto gameBrainStr = GameBrainToLevelName(static_cast<MODEL_COMPONENTS::TGameBrain>(gameBrainId));
         gameBrainsList.push_back(QString(gameBrainStr.c_str()));
     }
     return gameBrainsList;

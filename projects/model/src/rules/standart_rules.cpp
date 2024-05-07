@@ -23,7 +23,7 @@ bool TStandartRules::isValidGameValue( TGameValue< uint8_t > const & _gameValue 
     return isValidGameValueList(_gameValue.List());
 }
 
-bool TStandartRules::isValidGameValueList( std::vector< uint8_t > const & _gameValuelist )
+bool TStandartRules::isValidGameValueList( TGameValueList const & _gameValuelist )
 {
     std::set<uint8_t> uniqList;
     if(_gameValuelist.size() != ValueSize())
@@ -32,7 +32,7 @@ bool TStandartRules::isValidGameValueList( std::vector< uint8_t > const & _gameV
     }
     for( auto digit : _gameValuelist )
     {
-        if(digit > 9 || uniqList.contains(digit))
+        if(digit >= NumbersCount() || uniqList.contains(digit))
         {
             return false;
         }
@@ -43,13 +43,18 @@ bool TStandartRules::isValidGameValueList( std::vector< uint8_t > const & _gameV
 
 std::pair<uint32_t, uint32_t> TStandartRules::calculateBullsAndCows( TGameValue<uint8_t> const & _predictedValue, TGameValue<uint8_t> const & _trueValue)
 {
+    return calculateBullsAndCows(_predictedValue.List(), _trueValue.List() );
+}
+
+std::pair<uint32_t, uint32_t> TStandartRules::calculateBullsAndCows( TGameValueList const & _predictedValue, TGameValueList const & _trueValue)
+{
     uint32_t bulls = 0;
     uint32_t cows = 0;
     for(uint32_t i = 0; i < ValueSize( ); ++i)
     {
         for(uint32_t j = 0; j < ValueSize( ); ++j)
         {
-            if(_predictedValue.List().at(i) == _trueValue.List().at(j))
+            if(_predictedValue.at(i) == _trueValue.at(j))
             {
                 if(i == j)
                 {
@@ -68,7 +73,7 @@ std::pair<uint32_t, uint32_t> TStandartRules::calculateBullsAndCows( TGameValue<
 
 TGameValue<uint8_t> TStandartRules::GetRandomGameValue( std::function< uint32_t( uint32_t ) > const & randomByModulus )
 {
-    std::vector< uint8_t > uniqList;
+    TGameValueList uniqList;
     for(uint8_t i = 0; i < NumbersCount(); ++i)
     {
         uniqList.push_back(i);
@@ -91,7 +96,7 @@ bool TStandartRules::isWinResults( std::pair<uint32_t, uint32_t> results )
 
 void TStandartRules::fillPossibleValuesList( )
 {
-    std::vector< uint8_t > possibleValue(ValueSize(), 0);
+    TGameValueList possibleValue(ValueSize(), 0);
     int32_t pos = 0;
     while( pos >= 0 )
     {

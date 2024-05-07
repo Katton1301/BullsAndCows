@@ -10,6 +10,7 @@
 class TStandartRules
 {
 public:
+    using TGameValueList = std::vector<uint8_t>;
     /// destructor
     ~TStandartRules( );
 
@@ -33,9 +34,10 @@ public:
     }
 
     bool isValidGameValue( TGameValue< uint8_t > const & _gameValue );
-    bool isValidGameValueList( std::vector< uint8_t > const & _gameValuelist );
+    bool isValidGameValueList( TGameValueList const & _gameValuelist );
 
     std::pair<uint32_t, uint32_t> calculateBullsAndCows( TGameValue<uint8_t> const & _predictedValue, TGameValue<uint8_t> const & _trueValue);
+    std::pair<uint32_t, uint32_t> calculateBullsAndCows( TGameValueList const & _predictedValue, TGameValueList const & _trueValue);
 
     TGameValue<uint8_t> GetRandomGameValue( std::function< uint32_t( uint32_t ) > const & randomByModulus );
 

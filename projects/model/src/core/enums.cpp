@@ -52,6 +52,10 @@ namespace MODEL_COMPONENTS
                 stream_ << "SMART";
                 break;
 
+            case TGameBrain::BEST  :
+                stream_ << "BEST";
+                break;
+
             default :
                 stream_ << "[Error] identifier of game brain is wrong : " << static_cast< int32_t >( _gameBrain ) << std::endl;
                 assert( false && " incorrect game brain identifier" );
