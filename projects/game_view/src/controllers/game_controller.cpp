@@ -18,6 +18,10 @@ namespace MODEL_COMPONENTS
                 stream_ << "COMPUTER";
                 break;
 
+            case TGameMode::PLAYER_VS_COMPUTER  :
+                stream_ << "PLAYER_VS_COMPUTER";
+                break;
+
             default :
                 stream_ << "[Error] identifier of game mode is wrong : " << static_cast< int32_t >( _gameMode ) << std::endl;
                 assert( false && " incorrect game mode identifier" );
@@ -29,7 +33,8 @@ namespace MODEL_COMPONENTS
 
 
 TGameController::TGameController()
-    : m_game_process(std::make_shared<TStandartGameProcess>())
+    : m_player_game_process(std::make_shared<TStandartGameProcess>())
+    , m_computer_game_process(std::make_shared<TStandartGameProcess>())
     , m_gameMode(MODEL_COMPONENTS::TGameMode::UNKNOWN)
     , m_gameBrain(MODEL_COMPONENTS::TGameBrain::UNKNOWN)
 {
@@ -63,55 +68,105 @@ void TGameController::setGameBrain( MODEL_COMPONENTS::TGameBrain _gameBrain )
 
 MODEL_COMPONENTS::TGameStage TGameController::GameStage() const
 {
-    return GameProcess_cref( ).GameStage();
+    return PlayerGameProcess_cref( ).GameStage();
 }
 
 void TGameController::InitGame()
 {
-    GameProcess_ref().Init();
+    PlayerGameProcess_ref().Init();
+    ComputerGameProcess_ref().Init();
 }
 
 void TGameController::CreateGame()
 {
-    assert( GameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER );
-
-    GameProcess_ref().setTrueGameValue( TStandartRules::Instance()->GetRandomGameValue(GameProcess_ref().RandomByModulus()) );
+    assert( PlayerGameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER );
+    assert( ComputerGameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER );
+    switch (GameMode())
+    {
+    case MODEL_COMPONENTS::TGameMode::PLAYER:
+        PlayerGameProcess_ref().setTrueGameValue( TStandartRules::Instance()->GetRandomGameValue(PlayerGameProcess_ref().RandomByModulus()) );
+        break;
+    case MODEL_COMPONENTS::TGameMode::COMPUTER:
+        ComputerGameProcess_ref().setTrueGameValue( TStandartRules::Instance()->GetRandomGameValue(ComputerGameProcess_ref().RandomByModulus()) );
+        break;
+    case MODEL_COMPONENTS::TGameMode::PLAYER_VS_COMPUTER:
+        {
+            auto randomValue = TStandartRules::Instance()->GetRandomGameValue(PlayerGameProcess_ref().RandomByModulus());
+            PlayerGameProcess_ref().setTrueGameValue( randomValue );
+            ComputerGameProcess_ref().setTrueGameValue( randomValue );
+        }
+        break;
+    default:
+        assert(false && "wrong game mode!");
+        break;
+    }
     emit gameStarted(GameMode());
 }
 
-void TGameController::appendGameValue( std::vector< uint8_t > const & _gameValueList )
+void TGameController::PlayerStep( std::vector< uint8_t > const & _gameValueList )
 {
-    assert( GameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::IN_PROGRESS );
-    assert( GameMode() == MODEL_COMPONENTS::TGameMode::PLAYER );
-    GameProcess_ref().appendGameValue(TGameValue(_gameValueList));
-    handleResults();
+    assert( PlayerGameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::IN_PROGRESS );
+    PlayerGameProcess_ref().appendGameValue(TGameValue(_gameValueList));
+
+    sendProcessResults(PlayerGameProcess_ref(), MODEL_COMPONENTS::TGameMode::PLAYER);
+    if(
+        GameMode() == MODEL_COMPONENTS::TGameMode::PLAYER_VS_COMPUTER &&
+        ComputerGameProcess_ref().GameStage() != MODEL_COMPONENTS::TGameStage::FINISHED
+    )
+    {
+        makeStep();
+    }
+
+    if( PlayerGameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::FINISHED )
+    {
+        while(ComputerGameProcess_ref().GameStage() != MODEL_COMPONENTS::TGameStage::FINISHED)
+        {
+            makeStep();
+        }
+        if(PlayerGameProcess_ref( ).AttemptsCount() < ComputerGameProcess_ref().AttemptsCount())
+        {
+            emit gameFinished( MODEL_COMPONENTS::TGameMode::PLAYER );
+        }
+        if(PlayerGameProcess_ref( ).AttemptsCount() == ComputerGameProcess_ref().AttemptsCount())
+        {
+            emit gameFinished( MODEL_COMPONENTS::TGameMode::PLAYER_VS_COMPUTER );
+        }
+        if(PlayerGameProcess_ref( ).AttemptsCount() > ComputerGameProcess_ref().AttemptsCount())
+        {
+            emit gameFinished( MODEL_COMPONENTS::TGameMode::COMPUTER );
+        }
+    }
 }
 
 void TGameController::makeStep()
 {
-    assert( GameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::IN_PROGRESS );
-    assert( GameMode() == MODEL_COMPONENTS::TGameMode::COMPUTER );
-    GameProcess_ref().makeStep();
-    handleResults();
+    assert( ComputerGameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::IN_PROGRESS );
+    ComputerGameProcess_ref().makeStep();
+    sendProcessResults(ComputerGameProcess_ref(), MODEL_COMPONENTS::TGameMode::COMPUTER);
+    if(
+        GameMode() == MODEL_COMPONENTS::TGameMode::COMPUTER &&
+        ComputerGameProcess_ref().GameStage() == MODEL_COMPONENTS::TGameStage::FINISHED
+    )
+    {
+        emit gameFinished( MODEL_COMPONENTS::TGameMode::COMPUTER );
+    }
 }
 
-void TGameController::handleResults()
+void TGameController::sendProcessResults(TStandartGameProcess const & _gameProcess, MODEL_COMPONENTS::TGameMode _gameMode  )
 {
     emit sendAttemptResults(
-                GameProcess_ref().HistoryList().back().first.List(),
-                GameProcess_ref().HistoryList().back().second.first,
-                GameProcess_ref().HistoryList().back().second.second,
-                GameProcess_ref().AttemptsCount()
+                _gameMode,
+                _gameProcess.HistoryList().back().first.List(),
+                _gameProcess.HistoryList().back().second.first,
+                _gameProcess.HistoryList().back().second.second,
+                _gameProcess.AttemptsCount()
             );
-    if( GameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::FINISHED )
-    {
-        emit gameFinished( GameMode() );
-    }
 }
 
 void TGameController::gameModeSwitched(MODEL_COMPONENTS::TGameMode _gameMode)
 {
-    assert( GameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER );
+    assert( PlayerGameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER );
+    assert( ComputerGameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER );
     setGameMode(_gameMode);
 }
 
@@ -119,7 +174,7 @@ void TGameController::gameBrainSwitched(MODEL_COMPONENTS::TGameBrain _gameBrain)
 {
     if(GameBrain() != _gameBrain)
     {
-        GameProcess_ref( ).selectBrain(_gameBrain);
+        ComputerGameProcess_ref( ).selectBrain(_gameBrain);
         setGameBrain(_gameBrain);
     }
 }

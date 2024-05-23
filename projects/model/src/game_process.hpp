@@ -24,7 +24,7 @@ class TStandartGameProcess : public TGameProcessBase
 {
 public: //types
     using THistoryList = std::vector< std::pair< TGameValue<uint8_t>, std::pair<uint32_t, uint32_t > > >;
-    friend class TStandartBrain;
+    friend struct TStandartBrain;
 public: //methods
     TStandartGameProcess( );
     ~TStandartGameProcess( ) = default;

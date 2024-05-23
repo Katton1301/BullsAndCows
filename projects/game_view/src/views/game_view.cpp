@@ -6,6 +6,7 @@ QTableWidgetItem * createTableItem(QString text)
 {
     auto item = new QTableWidgetItem(text);
     item->setTextAlignment(Qt::AlignHCenter);
+    item->setFlags(item->flags() & ~Qt::ItemIsEditable);
     return item;
 }
 
@@ -35,14 +36,23 @@ TGameView::TGameView( QWidget* _parent )
     , m_game_controller(new TGameController)
 {
     ui.setupUi( this );
-    ui.historyTable->setColumnCount(4);
-    ui.historyTable->setHorizontalHeaderItem(0, createTableItem("i"));
-    ui.historyTable->setHorizontalHeaderItem(1, createTableItem("Bulls"));
-    ui.historyTable->setHorizontalHeaderItem(2, createTableItem("Cows"));
-    ui.historyTable->setHorizontalHeaderItem(3, createTableItem("Number"));
-    ui.historyTable->clearContents();
-    ui.historyTable->setRowCount(0);
-    ui.historyTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui.historyComputerTable->setColumnCount(4);
+    ui.historyComputerTable->setHorizontalHeaderItem(0, createTableItem("i"));
+    ui.historyComputerTable->setHorizontalHeaderItem(1, createTableItem("Bulls"));
+    ui.historyComputerTable->setHorizontalHeaderItem(2, createTableItem("Cows"));
+    ui.historyComputerTable->setHorizontalHeaderItem(3, createTableItem("Number"));
+    ui.historyComputerTable->clearContents();
+    ui.historyComputerTable->setRowCount(0);
+    ui.historyComputerTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    ui.historyPlayerTable->setColumnCount(4);
+    ui.historyPlayerTable->setHorizontalHeaderItem(0, createTableItem("i"));
+    ui.historyPlayerTable->setHorizontalHeaderItem(1, createTableItem("Bulls"));
+    ui.historyPlayerTable->setHorizontalHeaderItem(2, createTableItem("Cows"));
+    ui.historyPlayerTable->setHorizontalHeaderItem(3, createTableItem("Number"));
+    ui.historyPlayerTable->clearContents();
+    ui.historyPlayerTable->setRowCount(0);
+    ui.historyPlayerTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
 
     QObject::connect(
@@ -74,9 +84,9 @@ TGameView::TGameView( QWidget* _parent )
 
     QObject::connect(
         &(*m_game_controller),
-        SIGNAL( sendAttemptResults(std::vector< uint8_t> const &, uint32_t, uint32_t, uint32_t) ),
+        SIGNAL( sendAttemptResults(MODEL_COMPONENTS::TGameMode, std::vector< uint8_t> const &, uint32_t, uint32_t, uint32_t) ),
         this,
-        SLOT( onAttemptResults(std::vector< uint8_t> const &, uint32_t, uint32_t, uint32_t) )
+        SLOT( onAttemptResults(MODEL_COMPONENTS::TGameMode, std::vector< uint8_t> const &, uint32_t, uint32_t, uint32_t) )
     );
 
 }
@@ -95,7 +105,8 @@ void TGameView::OnInitialUpdate( )
     {
         ui.gameBrainComboBox->addItem(gameBrain);
     }
-
+    ui.computerHistoryFrame->setVisible(false);
+    ui.playerHistoryFrame->setVisible(false);
     ui.digitsFrame->setVisible(false);
     ui.sendButton->setVisible(false);
     ui.makeStepButton->setVisible(false);
@@ -109,8 +120,16 @@ void TGameView::onStartGame()
     {
         m_game_controller->InitGame();
     }
-    ui.historyTable->clearContents();
-    ui.historyTable->setRowCount(0);
+
+    ui.historyPlayerTable->clearContents();
+    ui.historyPlayerTable->setRowCount(0);
+    ui.historyComputerTable->clearContents();
+    ui.historyComputerTable->setRowCount(0);
+
+    ui.computerHistoryFrame->setVisible(m_game_controller->GameMode() != MODEL_COMPONENTS::TGameMode::PLAYER);
+
+    ui.playerHistoryFrame->setVisible(m_game_controller->GameMode() != MODEL_COMPONENTS::TGameMode::COMPUTER);
+
     m_game_controller->CreateGame();
     ui.startButton->setEnabled(false);
     ui.gameModeComboBox->setEnabled(false);
@@ -137,11 +156,23 @@ void TGameView::onGameFinished(MODEL_COMPONENTS::TGameMode _gameMode)
 {
 
     QMessageBox messageOk;
-    std::stringstream streamGameMode;
-    std::string strGameMode;
-    streamGameMode << _gameMode;
-    streamGameMode >> strGameMode;
-    messageOk.setText( QString( "Game was finished. %1 find correct number" ).arg(strGameMode.c_str()) );
+    std::string msgText = "Game was finished.";
+    switch(_gameMode)
+    {
+    case MODEL_COMPONENTS::TGameMode::COMPUTER:
+        msgText = "Game was finished. Computer found correct number";
+        break;
+    case MODEL_COMPONENTS::TGameMode::PLAYER:
+        msgText = "Game was finished. Player found correct number";
+        break;
+    case MODEL_COMPONENTS::TGameMode::PLAYER_VS_COMPUTER:
+        msgText = "Game was finished. Draw! Both found correct number";
+        break;
+    default:
+        break;
+    }
+
+    messageOk.setText( QString( msgText.c_str()) );
     messageOk.exec();
 
     ui.digitsFrame->setVisible(false);
@@ -183,19 +214,49 @@ void TGameView::onSwitchGameBrain([[maybe_unused]] int _currentIndex)
     emit switchGameBrain(gameBrain);
 }
 
-void TGameView::onAttemptResults( std::vector< uint8_t> const & _gameValueList, uint32_t bulls, uint32_t cows, uint32_t _attemptNumber )
+void TGameView::onAttemptResults(MODEL_COMPONENTS::TGameMode _gameMode, std::vector< uint8_t> const & _gameValueList, uint32_t bulls, uint32_t cows, uint32_t _attemptNumber )
 {
-    ui.historyTable->setRowCount(ui.historyTable->rowCount() + 1);
-    ui.historyTable->setItem(ui.historyTable->rowCount() - 1, 0, createTableItem(QString("%1").arg(_attemptNumber)));
-    ui.historyTable->setItem(ui.historyTable->rowCount() - 1, 1, createTableItem(QString("%1").arg(bulls)));
-    ui.historyTable->setItem(ui.historyTable->rowCount() - 1, 2, createTableItem(QString("%1").arg(cows)));
-    ui.historyTable->setItem(ui.historyTable->rowCount() - 1, 3, createTableItem(QString("%1").arg(QString("%1 %2 %3 %4")
-        .arg(_gameValueList.at(0))
-        .arg(_gameValueList.at(1))
-        .arg(_gameValueList.at(2))
-        .arg(_gameValueList.at(3))
-    )));
-    ui.numberVariations->setText(QString("%1").arg(_attemptNumber));
+    assert(
+            _gameMode == MODEL_COMPONENTS::TGameMode::COMPUTER ||
+            _gameMode == MODEL_COMPONENTS::TGameMode::PLAYER
+        );
+
+    auto * table = _gameMode == MODEL_COMPONENTS::TGameMode::COMPUTER
+                ? ui.historyComputerTable
+                : ui.historyPlayerTable
+                ;
+
+    int newRow = table->rowCount();
+    if(_gameMode == MODEL_COMPONENTS::TGameMode::COMPUTER && _attemptNumber > 10)
+    {
+        if(_attemptNumber == 11)
+        {
+            table->item(8, 0)->setText(QString("..."));
+            table->item(8, 1)->setText(QString("..."));
+            table->item(8, 2)->setText(QString("..."));
+            table->item(8, 3)->setText(QString("..."));
+        }
+        --newRow;
+    }
+
+
+    table->setRowCount(newRow + 1);
+    table->setItem(newRow, 0, createTableItem(QString("%1").arg(_attemptNumber)));
+    table->setItem(newRow, 1, createTableItem(QString("%1").arg(bulls)));
+    table->setItem(newRow, 2, createTableItem(QString("%1").arg(cows)));
+    if(_gameMode == MODEL_COMPONENTS::TGameMode::COMPUTER)
+    {
+        table->setItem(newRow, 3, createTableItem(QString("* * * *")));
+    }
+    else
+    {
+        table->setItem(newRow, 3, createTableItem(QString("%1").arg(QString("%1 %2 %3 %4")
+            .arg(_gameValueList.at(0))
+            .arg(_gameValueList.at(1))
+            .arg(_gameValueList.at(2))
+            .arg(_gameValueList.at(3))
+        )));
+    }
 }
 
 void TGameView::onSendGameValue()
@@ -206,7 +267,7 @@ void TGameView::onSendGameValue()
     gameValueList.push_back(ui.digit_3->text().toUInt());
     gameValueList.push_back(ui.digit_4->text().toUInt());
 
-    m_game_controller->appendGameValue(gameValueList);
+    m_game_controller->PlayerStep(gameValueList);
 }
 
 void TGameView::onMakeStep()

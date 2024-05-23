@@ -45,6 +45,7 @@ std::shared_ptr<TStandartBrain> TStandartGameProcess::GameBrain_ptr()
 void TStandartGameProcess::selectBrain( MODEL_COMPONENTS::TGameBrain _gameBrain )
 {
     m_gameBrain = createStandartBrain( this, _gameBrain);
+    GameBrain_ptr()->Init();
 }
 
 TStandartGameProcess::THistoryList const & TStandartGameProcess::HistoryList( ) const
@@ -64,7 +65,6 @@ void TStandartGameProcess::setTrueGameValue( TGameValue<uint8_t> const & _gameVa
     {
         m_trueGameValue = new TGameValue(_gameValue);
         setGameStage(MODEL_COMPONENTS::TGameStage::IN_PROGRESS);
-        m_gameBrain->Init();
     }
 }
 

@@ -19,7 +19,9 @@ file(
 
 message(STATUS "[strategy_calculation] target name: ${STRATEGY_CALCULATION_TARGET_NAME}")
 
-add_link_options(-Wl,-subsystem=windows)
+if(WIN32)
+    add_link_options(-Wl,-subsystem=windows)
+endif()
 
 add_executable( ${STRATEGY_CALCULATION_TARGET_NAME} ${sources} )
 

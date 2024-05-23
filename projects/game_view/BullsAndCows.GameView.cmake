@@ -29,7 +29,9 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_LIST_DIR}/gui)
 
-add_link_options(-Wl,-subsystem=windows)
+if(WIN32)
+    add_link_options(-Wl,-subsystem=windows)
+endif()
 
 add_executable( ${GAME_VIEW_TARGET_NAME} ${sources} )
 

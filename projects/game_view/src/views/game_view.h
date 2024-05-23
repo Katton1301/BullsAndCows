@@ -29,7 +29,7 @@ public slots :
     void onStartGame();
     void onSendGameValue();
     void onMakeStep();
-    void onAttemptResults( std::vector< uint8_t> const & _gameValueList, uint32_t bulls, uint32_t cows, uint32_t _attemptNumber );
+    void onAttemptResults(MODEL_COMPONENTS::TGameMode _gameMode, std::vector< uint8_t> const & _gameValueList, uint32_t bulls, uint32_t cows, uint32_t _attemptNumber );
     void onGameStarted(MODEL_COMPONENTS::TGameMode _gameMode);
     void onGameFinished(MODEL_COMPONENTS::TGameMode _gameMode);
 
