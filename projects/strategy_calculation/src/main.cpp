@@ -2,6 +2,61 @@
 #include <set>
 #include <random>
 #include <algorithm>
+#include <fstream>
+
+
+std::map<std::vector< uint8_t >, double> loadNumbers()
+{
+    std::ifstream calcedNumbers_in;
+    calcedNumbers_in.open("calces.txt");
+    std::map<std::vector< uint8_t >, double> values;
+    uint32_t numberValues;
+    calcedNumbers_in >> numberValues;
+    for(uint32_t i = 0; i < numberValues; ++i)
+    {
+        uint32_t intValue;
+        std::vector< uint8_t > value;
+        double isteps;
+        for(int j = 0; j < 4; ++j)
+        {
+            calcedNumbers_in >> intValue;
+            value.push_back(intValue);
+        }
+        calcedNumbers_in >> isteps;
+        values.emplace(value, isteps);
+    }
+    calcedNumbers_in.close();
+    return values;
+}
+
+void saveNumber(std::vector< uint8_t > number, double steps )
+{
+    auto values = loadNumbers();
+    if(!values.contains(number))
+    {
+        values.emplace(number, steps);
+    }
+
+    std::cout << "save: "
+            << static_cast<uint32_t>(number[0])
+            << static_cast<uint32_t>(number[1])
+            << static_cast<uint32_t>(number[2])
+            << static_cast<uint32_t>(number[3])
+            << " " << steps << std::endl;
+
+    std::ofstream calcedNumbers_out;
+    calcedNumbers_out.open("calces.txt");
+    calcedNumbers_out << values.size() << std::endl;
+    for(auto const & item : values)
+    {
+        for(auto intValue : item.first)
+        {
+            calcedNumbers_out << static_cast<uint32_t>(intValue) << " ";
+        }
+        calcedNumbers_out << item.second << std::endl;
+    }
+    calcedNumbers_out.close();
+}
 
 std::map< std::pair<uint32_t, uint32_t>, std::vector<std::vector< uint8_t >> > calculateBCForValue
     (std::vector< uint8_t > predictedValue, std::vector<std::vector< uint8_t >> & values)
@@ -18,38 +73,6 @@ std::map< std::pair<uint32_t, uint32_t>, std::vector<std::vector< uint8_t >> > c
         values.pop_back();
     }
     return valuesByBC;
-}
-
-std::string calculateHashString( std::map< std::pair<uint32_t, uint32_t>, std::vector<std::vector< uint8_t >> > const & valuesByBC )
-{
-    std::string hashStr(42, '0');
-    static std::map< std::pair<uint32_t, uint32_t>, uint32_t> indexByBC
-    {
-        {{0,0}, 0},
-        {{0,1}, 1},
-        {{1,0}, 2},
-        {{0,2}, 3},
-        {{1,1}, 4},
-        {{2,0}, 5},
-        {{0,3}, 6},
-        {{1,2}, 7},
-        {{2,1}, 8},
-        {{3,0}, 9},
-        {{0,4}, 10},
-        {{1,3}, 11},
-        {{2,2}, 12},
-        {{4,0}, 13},
-    };
-    for(auto const & valueBC : valuesByBC)
-    {
-        auto bc_index = indexByBC.at(valueBC.first);
-        uint32_t valuesCount = valueBC.second.size();
-        hashStr.at(bc_index * 3) = '0' + (valuesCount / 100);
-        valuesCount %= 100;
-        hashStr.at(bc_index * 3 + 1) = '0' + (valuesCount / 10);
-        hashStr.at(bc_index * 3 + 2) = '0' + (valuesCount % 10);
-    }
-    return hashStr;
 }
 
 std::vector<TValueNode *> handleValues( std::vector<std::vector< uint8_t >> const & values, int depth)
@@ -71,64 +94,100 @@ std::vector<TValueNode *> handleValues( std::vector<std::vector< uint8_t >> cons
 
     double bestStepCount = 100000000;
     std::vector<TValueNode *> bestNodes;
-    std::set< std::string > usedHashes;
-    for(auto const & valuesAndBC : valuesByBC)
-    {
-        std::string hashStr = calculateHashString(valuesAndBC.second);
-        if(depth > 2 || values.size() < 1000 || !usedHashes.contains(hashStr))
-        {
-            usedHashes.emplace(hashStr);
-            double stepsSumm = 0.0;
-            int BCVariations = 0;
-            TValueNode *middleNode = new TValueNode( valuesAndBC.first, 1, values.size(), depth );
-            bool highDepth = false;
 
-            for(auto const & value : valuesAndBC.second)
+    if(depth == 2)
+    {
+        auto calcedValues = loadNumbers();
+        double bestCalcedStep = 100000000;
+        std::vector< uint8_t > bestCalcedValue;
+        for(auto const & calcedValue : calcedValues)
+        {
+
+            if(bestCalcedValue.size() == 0)
             {
-                ++BCVariations;
-                if(value.second.size() > 1)
-                {
-                    if(depth > 6)
-                    {
-                        highDepth = true;
-                        break;
-                    }
-                    for( auto & child : handleValues(value.second, depth + 1))
-                    {
-                        child->recalcSteps();
-                        middleNode->addChild(value.first.first, value.first.second, child);
-                    }
-                    stepsSumm += middleNode->ChildsAt(value.first.first, value.first.second).front()->Steps();
-                }
-                else if(value.first.first < 4)
-                {
-                    TValueNode *childNode = new TValueNode( value.second.front(), 1, 1, depth + 1 );
-                    middleNode->addChild(value.first.first, value.first.second, childNode);
-                    ++stepsSumm;
-                }
-                else
-                {
-                    TValueNode *childNode = new TValueNode( valuesAndBC.first, 0, 1, depth + 1 );
-                    middleNode->addChild(value.first.first, value.first.second, childNode);
-                }
-            }
-            if(bestNodes.empty() || (bestStepCount >= stepsSumm / BCVariations && !highDepth))
-            {
-                if(bestStepCount > stepsSumm / BCVariations)
-                {
-                    bestStepCount = stepsSumm / BCVariations;
-                    for(auto & child : bestNodes)
-                    {
-                        delete child;
-                    }
-                    bestNodes.clear();
-                }
-                bestNodes.push_back(middleNode);
+                bestCalcedStep = calcedValue.second;
+                bestCalcedValue = calcedValue.first;
             }
             else
             {
-                delete middleNode;
+                std::vector< uint8_t > deletedValue = calcedValue.first;
+                if( bestCalcedStep <= calcedValue.second )
+                {
+                    bestCalcedStep = calcedValue.second;
+                    deletedValue = bestCalcedValue;
+                    bestCalcedValue = calcedValue.first;
+                }
+                auto it = std::find_if(
+                            valuesByBC.begin(),
+                            valuesByBC.end(),
+                            [deletedValue](auto const & valuesAndBC)
+                            {
+                                return valuesAndBC.first == deletedValue;
+                            }
+                        );
+                if(it != valuesByBC.end())
+                {
+                    valuesByBC.erase(it);
+                }
             }
+        }
+    }
+
+    int n = 0;
+    for(auto const & valuesAndBC : valuesByBC)
+    {
+        TValueNode *middleNode = new TValueNode( valuesAndBC.first, 1, values.size(), depth );
+        bool highDepth = false;
+
+        for(auto const & value : valuesAndBC.second)
+        {
+            if(value.second.size() > 1)
+            {
+                if(depth > 6)
+                {
+                    highDepth = true;
+                    break;
+                }
+                for( auto & child : handleValues(value.second, depth + 1))
+                {
+                    child->recalcSteps();
+                    middleNode->addChild(value.first.first, value.first.second, child);
+                }
+            }
+            else if(value.first.first < 4)
+            {
+                TValueNode *childNode = new TValueNode( value.second.front(), 1, 1, depth + 1 );
+                middleNode->addChild(value.first.first, value.first.second, childNode);
+            }
+            else
+            {
+                TValueNode *childNode = new TValueNode( valuesAndBC.first, 0, 1, depth + 1 );
+                middleNode->addChild(value.first.first, value.first.second, childNode);
+            }
+        }
+        middleNode->recalcSteps();
+
+        if(depth == 2)
+        {
+            saveNumber(valuesAndBC.first, middleNode->Steps());
+        }
+
+        if(bestNodes.empty() || (bestStepCount >= middleNode->Steps() && !highDepth))
+        {
+            if(bestStepCount > middleNode->Steps())
+            {
+                bestStepCount = middleNode->Steps();
+                for(auto & child : bestNodes)
+                {
+                    delete child;
+                }
+                bestNodes.clear();
+            }
+            bestNodes.push_back(middleNode);
+        }
+        else
+        {
+            delete middleNode;
         }
     }
     /* for minimize json file */
@@ -200,7 +259,6 @@ int main ( )
         {
             if(
                 (valueBC.first.first == 4 && valueBC.first.second == 0) ||
-                (valueBC.first.first == 0 && valueBC.first.second == 0) ||
                 (valueBC.first.first == 0 && valueBC.first.second == 3) ||
                 (valueBC.first.first == 1 && valueBC.first.second == 2) ||
                 (valueBC.first.first == 2 && valueBC.first.second == 1) ||

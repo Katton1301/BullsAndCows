@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <ctime>
+#include <cinttypes>
 
 namespace MODEL_COMPONENTS
 {
