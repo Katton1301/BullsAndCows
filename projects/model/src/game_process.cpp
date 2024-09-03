@@ -23,18 +23,20 @@ TStandartGameProcess::TStandartGameProcess( )
 {
     std::random_device device;
     random_generator_.seed(device());
-}
 
-void TStandartGameProcess::Init()
-{
-    TGameProcessBase::Init();
     m_randomByModulus =
         [this]( uint32_t _modulus )->unsigned int
         {
             std::uniform_int_distribution<uint32_t> range(0, _modulus - 1);
             return range(random_generator_);
         };
+}
+
+void TStandartGameProcess::Init()
+{
+    TGameProcessBase::Init();
     m_historyList.clear();
+    GameBrain_ptr()->Init();
 }
 
 std::shared_ptr<TStandartBrain> TStandartGameProcess::GameBrain_ptr()
