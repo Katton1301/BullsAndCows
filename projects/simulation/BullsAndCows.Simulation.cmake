@@ -37,7 +37,7 @@ add_executable( ${SIMULATION_TARGET_NAME} ${sources} )
 
 set(simulation_libraries "")
 set(simulation_libraries ${simualation_libraries} "${MODEL_TARGET_NAME}")
-message(STATUS "[simulation_view] project dependencies: $simulation_libraries")
+message(STATUS "[simulation_view] project dependencies: ${simulation_libraries}")
 
 target_link_libraries(${SIMULATION_TARGET_NAME} ${simulation_libraries})
 target_link_libraries(${SIMULATION_TARGET_NAME} Qt5::Widgets)

@@ -27,7 +27,7 @@ add_executable( ${STRATEGY_CALCULATION_TARGET_NAME} ${sources} )
 
 set(calc_libraries "")
 set(calc_libraries ${calc_libraries} "${MODEL_TARGET_NAME}")
-message(STATUS "[strategy_calculation] project dependencies: $calc_libraries")
+message(STATUS "[strategy_calculation] project dependencies: ${calc_libraries}")
 
 target_link_libraries(${STRATEGY_CALCULATION_TARGET_NAME} ${calc_libraries})
 
