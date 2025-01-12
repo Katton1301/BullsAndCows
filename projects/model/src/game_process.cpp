@@ -36,7 +36,6 @@ void TStandartGameProcess::Init()
 {
     TGameProcessBase::Init();
     m_historyList.clear();
-    GameBrain_ptr()->Init();
 }
 
 std::shared_ptr<TStandartBrain> TStandartGameProcess::GameBrain_ptr()
