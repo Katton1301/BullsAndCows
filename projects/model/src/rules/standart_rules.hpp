@@ -14,13 +14,10 @@ public:
     /// destructor
     ~TStandartRules( );
 
-    static TStandartRules * Instance()
+    static TStandartRules & Instance()
     {
-        if(m_standartRules == nullptr)
-        {
-            m_standartRules = new TStandartRules();
-        }
-        return m_standartRules;
+        static TStandartRules standartRules;
+        return standartRules;
     }
 
     constexpr uint32_t ValueSize( )
@@ -52,6 +49,5 @@ private: //methods
     void fillPossibleValuesList( );
 
 private: //attributes
-    static TStandartRules* m_standartRules;
     std::vector< TGameValue<uint8_t> > m_possibleValues;
 };

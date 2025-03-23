@@ -1,5 +1,6 @@
 .tmp/
 bin/
+projects/build/
 debug/
 release/
 .logs/

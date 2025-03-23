@@ -1,7 +1,5 @@
 #include "standart_rules.hpp"
 
-TStandartRules* TStandartRules::m_standartRules = nullptr;
-
 
 TStandartRules::TStandartRules()
 {
@@ -10,12 +8,6 @@ TStandartRules::TStandartRules()
 
 TStandartRules::~TStandartRules( )
 {
-    if ( m_standartRules != nullptr )
-    {
-        TStandartRules* standartRules = m_standartRules;
-        m_standartRules = nullptr;
-        delete standartRules;
-    }
 }
 
 bool TStandartRules::isValidGameValue( TGameValue< uint8_t > const & _gameValue )

@@ -13,7 +13,6 @@ TSimulationThread::TSimulationThread()
 
 TSimulationThread::~TSimulationThread()
 {
-
 }
 
 void TSimulationThread::Prepare( MODEL_COMPONENTS::TGameBrain _gameBrain, uint64_t _startAmount )
@@ -51,11 +50,16 @@ void TSimulationThread::run( )
 
     for(uint32_t i = 0; i < m_startsAmount; ++i)
     {
+        if(m_emergency_stop)
+        {
+            m_emergency_stop = false;
+            break;
+        }
         m_profilerGameProcess.start();
         GameProcess_ref( ).Init();
         assert( GameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER );
 
-        GameProcess_ref().setTrueGameValue( TStandartRules::Instance()->GetRandomGameValue(GameProcess_ref().RandomByModulus()) );
+        GameProcess_ref().setTrueGameValue( TStandartRules::Instance().GetRandomGameValue(GameProcess_ref().RandomByModulus()) );
 
         while(GameProcess_ref( ).GameStage() != MODEL_COMPONENTS::TGameStage::FINISHED)
         {
@@ -64,10 +68,8 @@ void TSimulationThread::run( )
             GameProcess_ref().makeStep();
             m_profilerGameStep.stop();
         }
-        if(!m_statisticAttempts.contains(GameProcess_ref().AttemptsCount()))
-        {
-            m_statisticAttempts.emplace(GameProcess_ref().AttemptsCount(),0);
-        }
+        
+        m_statisticAttempts.try_emplace(GameProcess_ref().AttemptsCount(),0);
         ++m_statisticAttempts.at(GameProcess_ref().AttemptsCount());
 
 

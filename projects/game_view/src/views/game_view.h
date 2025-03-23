@@ -40,6 +40,6 @@ private :
 
 //attributes
     Ui::TFormMainView ui{};
-    std::unique_ptr<TGameController> m_game_controller{};
+    std::shared_ptr<TGameController> m_game_controller{};
 
 };

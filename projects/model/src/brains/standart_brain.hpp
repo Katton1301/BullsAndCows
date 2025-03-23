@@ -13,11 +13,11 @@ struct TStandartBrain : public IGameBrain
     TStandartBrain( TStandartGameProcess const * _gameProcess );
     ~TStandartBrain() = default;
 
-    TGameValue<uint8_t> const * PredictedValue_cptr() const;
+    std::shared_ptr<TGameValue<uint8_t>> const & PredictedValue() const;
 
 protected:
     TStandartGameProcess const *  m_gameProcess_cptr = nullptr;
-    TGameValue<uint8_t> * m_predictedValue = nullptr;
+    std::shared_ptr<TGameValue<uint8_t>> m_predictedValue{};
 };
 
 class TStorageTreeBrain : public TStandartBrain
@@ -35,7 +35,7 @@ protected:
 
 protected:
     std::vector<std::pair<uint8_t, uint8_t>> m_digitCoins{};
-    TValueNode *m_gameNode = nullptr;
+    std::shared_ptr<TValueNode >m_gameNode = nullptr;
 };
 
 class TAnaliticBrain : public TStandartBrain

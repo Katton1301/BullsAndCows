@@ -35,6 +35,7 @@ TStandartGameProcess::TStandartGameProcess( )
 void TStandartGameProcess::Init()
 {
     TGameProcessBase::Init();
+    GameBrain_ptr()->Init();
     m_historyList.clear();
 }
 
@@ -62,9 +63,9 @@ uint32_t TStandartGameProcess::AttemptsCount( ) const
 void TStandartGameProcess::setTrueGameValue( TGameValue<uint8_t> const & _gameValue )
 {
     assert(GameStage() == MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER);
-    if(TStandartRules::Instance()->isValidGameValue(_gameValue))
+    if(TStandartRules::Instance().isValidGameValue(_gameValue))
     {
-        m_trueGameValue = new TGameValue(_gameValue);
+        m_trueGameValue = std::make_shared<TGameValue<uint8_t>>(_gameValue);
         setGameStage(MODEL_COMPONENTS::TGameStage::IN_PROGRESS);
     }
 }
@@ -72,10 +73,10 @@ void TStandartGameProcess::setTrueGameValue( TGameValue<uint8_t> const & _gameVa
 void TStandartGameProcess::appendGameValue( TGameValue<uint8_t> const & _gameValue )
 {
     assert(GameStage() == MODEL_COMPONENTS::TGameStage::IN_PROGRESS);
-    assert(TStandartRules::Instance()->isValidGameValue(_gameValue));
-    auto bullsNCows = TStandartRules::Instance()->calculateBullsAndCows(_gameValue, *m_trueGameValue);
+    assert(TStandartRules::Instance().isValidGameValue(_gameValue));
+    auto bullsNCows = TStandartRules::Instance().calculateBullsAndCows(_gameValue, *m_trueGameValue);
     m_historyList.push_back(std::make_pair(_gameValue,bullsNCows));
-    if(TStandartRules::Instance()->isWinResults(bullsNCows))
+    if(TStandartRules::Instance().isWinResults(bullsNCows))
     {
         setGameStage(MODEL_COMPONENTS::TGameStage::FINISHED);
     }
@@ -86,9 +87,9 @@ void TStandartGameProcess::makeStep( )
     assert(GameStage() == MODEL_COMPONENTS::TGameStage::IN_PROGRESS);
     assert(GameBrain_ptr());
     GameBrain_ptr()->makePredict();
-    assert(GameBrain_ptr()->PredictedValue_cptr());
-    appendGameValue(*GameBrain_ptr()->PredictedValue_cptr());
-    if(TStandartRules::Instance()->isWinResults(HistoryList().back().second))
+    assert(GameBrain_ptr()->PredictedValue());
+    appendGameValue(*GameBrain_ptr()->PredictedValue());
+    if(TStandartRules::Instance().isWinResults(HistoryList().back().second))
     {
         setGameStage(MODEL_COMPONENTS::TGameStage::FINISHED);
     }

@@ -45,6 +45,7 @@ TSimulationView::~TSimulationView( )
     if ( m_threadSimulation.isRunning( ) )
     {
         std::cout << "The Simulation Thread is running .... kill here";
+        m_threadSimulation.EmegencyStopRequest();
         m_threadSimulation.terminate( );
 
         if ( !m_threadSimulation.isFinished( ) )
@@ -119,7 +120,8 @@ void TSimulationView::startSimulate( )
 void TSimulationView::stopSimulate( )
 {
     std::cout << "===> " << __PRETTY_FUNCTION__ << std::endl;
-    m_threadSimulation.terminate( );
+    m_threadSimulation.EmegencyStopRequest();
+    m_threadSimulation.terminate();
 
     std::cout << "Simulation Thread isRunning( ) : " << m_threadSimulation.isRunning( ) << std::endl;
     std::cout << "Simulation Thread isFinished( ) : " << m_threadSimulation.isFinished( ) << std::endl;

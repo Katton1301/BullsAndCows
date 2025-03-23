@@ -2,12 +2,13 @@
 #include <cstdint>
 #include <map>
 #include "standart_rules.hpp"
+#include <rapidjson/document.h>
 
 class TValueNode
 {
 public:
     using TGameValueList = TStandartRules::TGameValueList;
-    using TChildNodes = std::map< std::pair<uint32_t, uint32_t>, std::vector<TValueNode*> >;
+    using TChildNodes = std::map< std::pair<uint32_t, uint32_t>, std::shared_ptr<TValueNode> >;
 
 public:
     TValueNode() = delete;
@@ -20,15 +21,6 @@ public:
 
     ~TValueNode()
     {
-        for(auto & child : childs)
-        {
-            for(auto & childOfchild : child.second )
-            {
-                delete childOfchild;
-            }
-            child.second.clear();
-        }
-        childs.clear();
     }
 
     double Steps() const
@@ -51,8 +43,12 @@ public:
         return depth;
     }
 
-    std::vector<TValueNode*> const & ChildsAt(int32_t bulls, uint32_t cows) const
+    std::shared_ptr<TValueNode> const & ChildsAt(int32_t bulls, uint32_t cows) const
     {
+        if(!childs.contains({bulls,cows}))
+        {
+            std::cout << "stop" << std::endl;
+        }
         return childs.at({bulls,cows});
     }
 
@@ -66,7 +62,7 @@ public:
         return childs;
     }
 
-    void addChild( uint32_t _bulls, uint32_t _cows, TValueNode *_child);
+    void addChild( uint32_t _bulls, uint32_t _cows, std::shared_ptr<TValueNode> && _child);
 
     void recalcSteps();
     void updateWeight();
@@ -83,5 +79,11 @@ std::ostream& tabs(std::ostream& _stream_, uint32_t N );
 
 std::ostream& operator<<( std::ostream& _stream_, TValueNode const & _parentNode);
 
-void writeToJson( std::string const & _path, TValueNode const & _parentNode );
-TValueNode * loadNodeFromJson( std::string const & _path, std::vector<uint8_t> mainValue );
+namespace JSON_TOOLS
+{
+    void writeToJsonStorage( rapidjson::Document * storage, std::shared_ptr<TValueNode> const & _parentNode, rapidjson::Document * external_storage );
+    void writeToJson( std::string const & _path, std::shared_ptr<TValueNode> const & _parentNode );
+    std::shared_ptr<TValueNode> loadNodeFromJsonStorage( const rapidjson::Value * storage );
+    std::shared_ptr<TValueNode > loadNodeFromJson( std::string const & _path, std::vector<uint8_t> mainValue );
+}
+

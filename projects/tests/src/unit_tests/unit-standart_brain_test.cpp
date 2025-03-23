@@ -6,36 +6,36 @@ TEST_CASE("1. Check standart brain", "[standart brain]")
 {
     SECTION("1.1. Test standart rules")
     {
-        CHECK(TStandartRules::Instance()->NumbersCount() == 10);
-        CHECK(TStandartRules::Instance()->ValueSize() == 4);
+        CHECK(TStandartRules::Instance().NumbersCount() == 10);
+        CHECK(TStandartRules::Instance().ValueSize() == 4);
         std::vector< uint8_t > checkingValue{1,1,3,4};
-        CHECK(!TStandartRules::Instance()->isValidGameValueList(checkingValue));
+        CHECK(!TStandartRules::Instance().isValidGameValueList(checkingValue));
         checkingValue = {10,1,2,3};
-        CHECK(!TStandartRules::Instance()->isValidGameValueList(checkingValue));
+        CHECK(!TStandartRules::Instance().isValidGameValueList(checkingValue));
         checkingValue = {0,1,2,3,4};
-        CHECK(!TStandartRules::Instance()->isValidGameValueList(checkingValue));
+        CHECK(!TStandartRules::Instance().isValidGameValueList(checkingValue));
         checkingValue = {9,8,7,6};
-        CHECK(TStandartRules::Instance()->isValidGameValueList(checkingValue));
+        CHECK(TStandartRules::Instance().isValidGameValueList(checkingValue));
         checkingValue = {0,1,2,3};
-        CHECK(TStandartRules::Instance()->isValidGameValueList(checkingValue));
+        CHECK(TStandartRules::Instance().isValidGameValueList(checkingValue));
 
         std::vector< uint8_t > secondValue{4,5,6,7};
-        auto results = TStandartRules::Instance()->calculateBullsAndCows(checkingValue, secondValue);
-        CHECK( !TStandartRules::Instance()->isWinResults(results) );
+        auto results = TStandartRules::Instance().calculateBullsAndCows(checkingValue, secondValue);
+        CHECK( !TStandartRules::Instance().isWinResults(results) );
         CHECK( results.first == 0 );
         CHECK(results.second == 0 );
 
-        results = TStandartRules::Instance()->calculateBullsAndCows(checkingValue, checkingValue);
-        CHECK( TStandartRules::Instance()->isWinResults(results) );
+        results = TStandartRules::Instance().calculateBullsAndCows(checkingValue, checkingValue);
+        CHECK( TStandartRules::Instance().isWinResults(results) );
         CHECK( results.first == 4 );
         CHECK(results.second == 0 );
 
         checkingValue = {3,5,2,6};
-        results = TStandartRules::Instance()->calculateBullsAndCows(checkingValue, secondValue);
-        CHECK( !TStandartRules::Instance()->isWinResults(results) );
+        results = TStandartRules::Instance().calculateBullsAndCows(checkingValue, secondValue);
+        CHECK( !TStandartRules::Instance().isWinResults(results) );
         CHECK( results.first == 1 );
         CHECK(results.second == 1 );
-        CHECK( TStandartRules::Instance()->AllPossibleGameValues().size() == 5040 );
+        CHECK( TStandartRules::Instance().AllPossibleGameValues().size() == 5040 );
 
     }
 
@@ -70,9 +70,9 @@ TEST_CASE("1. Check standart brain", "[standart brain]")
                 ++attempts;
             }
             auto winValue  = game_process->HistoryList().back();
-            CHECK( TStandartRules::Instance()->isWinResults(winValue.second) );
-            auto results = TStandartRules::Instance()->calculateBullsAndCows(winValue.first, trueValue);
-            CHECK( TStandartRules::Instance()->isWinResults(results) );
+            CHECK( TStandartRules::Instance().isWinResults(winValue.second) );
+            auto results = TStandartRules::Instance().calculateBullsAndCows(winValue.first, trueValue);
+            CHECK( TStandartRules::Instance().isWinResults(results) );
         }
     }
 }

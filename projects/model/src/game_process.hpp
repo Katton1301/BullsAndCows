@@ -43,6 +43,6 @@ private:
     std::mt19937 random_generator_;
     std::function< uint32_t( uint32_t ) > m_randomByModulus;
     THistoryList m_historyList{};
-    TGameValue<uint8_t> *m_trueGameValue = nullptr;
+    std::shared_ptr<TGameValue<uint8_t>>m_trueGameValue = nullptr;
     std::shared_ptr<TStandartBrain> m_gameBrain = nullptr;
 };

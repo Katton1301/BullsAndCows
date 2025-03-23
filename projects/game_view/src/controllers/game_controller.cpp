@@ -84,14 +84,14 @@ void TGameController::CreateGame()
     switch (GameMode())
     {
     case MODEL_COMPONENTS::TGameMode::PLAYER:
-        PlayerGameProcess_ref().setTrueGameValue( TStandartRules::Instance()->GetRandomGameValue(PlayerGameProcess_ref().RandomByModulus()) );
+        PlayerGameProcess_ref().setTrueGameValue( TStandartRules::Instance().GetRandomGameValue(PlayerGameProcess_ref().RandomByModulus()) );
         break;
     case MODEL_COMPONENTS::TGameMode::COMPUTER:
-        ComputerGameProcess_ref().setTrueGameValue( TStandartRules::Instance()->GetRandomGameValue(ComputerGameProcess_ref().RandomByModulus()) );
+        ComputerGameProcess_ref().setTrueGameValue( TStandartRules::Instance().GetRandomGameValue(ComputerGameProcess_ref().RandomByModulus()) );
         break;
     case MODEL_COMPONENTS::TGameMode::PLAYER_VS_COMPUTER:
         {
-            auto randomValue = TStandartRules::Instance()->GetRandomGameValue(PlayerGameProcess_ref().RandomByModulus());
+            auto randomValue = TStandartRules::Instance().GetRandomGameValue(PlayerGameProcess_ref().RandomByModulus());
             PlayerGameProcess_ref().setTrueGameValue( randomValue );
             ComputerGameProcess_ref().setTrueGameValue( randomValue );
         }

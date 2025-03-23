@@ -26,6 +26,11 @@ public:
         return m_startsAmount;
     }
 
+    void EmegencyStopRequest()
+    {
+        m_emergency_stop = true;
+    }
+
 signals :
     void UpdateProgressBar( int in_iValue );
     void SimulationFinished( );
@@ -50,4 +55,5 @@ private:
     TTimeProfiler m_profilerGameProcess;
     TTimeProfiler m_profilerGameStep;
 
+    bool m_emergency_stop = false;
 };
