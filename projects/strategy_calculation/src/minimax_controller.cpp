@@ -99,14 +99,17 @@ void TMinimaxController::saveNumber(TValue const & number, double steps)
 
 std::shared_ptr<TValueNode> TMinimaxController::customMinimax(TValuesList const & values, int depth)
 {
-    std::map<TValue, TMinimaxController::TBCDistribution> distributionForValues;
+    uint32_t optimization_size = 100;
+    std::vector<std::pair<TValue, TMinimaxController::TBCDistribution>> distributionForValues;
     for (auto const & predictedValue : values)
     {
+        TMinimaxController::TBCDistribution bcDist;
         for (auto const & trueValue : values)
         {
             auto BC = TStandartRules::Instance().calculateBullsAndCows(predictedValue, trueValue);
-            distributionForValues[predictedValue][BC].push_back(trueValue);
+            bcDist[BC].push_back(trueValue);
         }
+        distributionForValues.push_back(std::make_pair(predictedValue,bcDist));
     }
 
     double bestStepCount = std::numeric_limits<uint32_t>::max();
@@ -130,23 +133,26 @@ std::shared_ptr<TValueNode> TMinimaxController::customMinimax(TValuesList const 
             }
         }
     }
-
+    if(values.size() > optimization_size)
+    {
+        std::shuffle(distributionForValues.begin(), distributionForValues.end(), std::default_random_engine{});
+    }
     for (auto const & [predValue, distribution] : distributionForValues)
     {
 
         auto middleNode = std::make_shared<TValueNode>(predValue, 1, values.size(), depth);
 
-        for (auto const & [bc, value] : distribution)
+        for (auto const & [bc, valueDist] : distribution)
         {
-            if (value.size() > 1)
+            if (valueDist.size() > 1)
             {
-                auto child = customMinimax(value, depth + 1);
+                auto child = customMinimax(valueDist, depth + 1);
                 child->recalcSteps();
                 middleNode->addChild(bc.first, bc.second, std::move(child));
             }
             else if (bc.first < 4)
             {
-                auto childNode = std::make_shared<TValueNode>(value.front(), 1, 1, depth + 1);
+                auto childNode = std::make_shared<TValueNode>(valueDist.front(), 1, 1, depth + 1);
                 middleNode->addChild(bc.first, bc.second, std::move(childNode));
             }
             else
@@ -169,6 +175,10 @@ std::shared_ptr<TValueNode> TMinimaxController::customMinimax(TValuesList const 
                 nodesList.clear();
             }
             nodesList.push_back(std::move(middleNode));
+            if(nodesList.size() >= 100) //forced optimiazation
+            {
+                break;
+            }
         }
     }
 
