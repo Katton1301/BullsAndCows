@@ -4,6 +4,8 @@
 #include <sstream>
 #include <iterator>
 #include <random>
+#include <algorithm>
+#include <list>
 
 TMinimaxController::TMinimaxController(int32_t _attempt)
 {
@@ -97,9 +99,272 @@ void TMinimaxController::saveNumber(TValue const & number, double steps)
     calced_numbers_out.close();
 }
 
+
+std::shared_ptr<TValueNode> TMinimaxController::splitingAlgorithm(TMinimaxController::TBCDistribution const & mainDistribution, TBCPair const & checkingBC, int depth)
+{
+    std::vector<std::pair<TValue, TMinimaxController::TBCDistribution>> bestValueAndDistList;
+    auto const & possibleValues = mainDistribution.at(checkingBC);
+    for(auto const & [bc, valuesDist] : mainDistribution)
+    {
+        if(
+            (bc.first == checkingBC.first && bc.second == checkingBC.second ) ||
+            (bc.first + bc.second < 4)
+        ) //take on best value from same type values if bc count even less 4 or this is true BC
+        {
+            std::vector<uint32_t> bestSplit;
+            TMinimaxController::TBCDistribution bestDist;
+            TValue bestValue;
+            bool isBestValueMayWin = false;
+            TValuesList processingValues(valuesDist.size());
+            std::copy(valuesDist.begin(), valuesDist.end(), processingValues.begin());
+            std::shuffle(processingValues.begin(), processingValues.end(), std::default_random_engine{});
+            for (auto const & predictedValue : processingValues)
+            {
+                TMinimaxController::TBCDistribution bcDist;
+                std::vector<uint32_t> splitList;
+                for (auto const & trueValue : possibleValues)
+                {
+                    auto BC = TStandartRules::Instance().calculateBullsAndCows(predictedValue, trueValue);
+                    bcDist[BC].push_back(trueValue);
+                }
+                for( auto const & [bc,valueDist] : bcDist)
+                {
+                    splitList.push_back(valueDist.size());
+                }
+                std::sort(splitList.begin(), splitList.end(), std::greater<>());
+
+                if(
+                    (
+                        bestSplit.size() == 0 ||
+                        splitList < bestSplit ||
+                        (
+                            splitList == bestSplit &&
+                            !isBestValueMayWin &&
+                            std::any_of(possibleValues.begin(), possibleValues.end(), [&predictedValue](auto const & value){return value == predictedValue;})
+                        )
+                    ) &&
+                    (
+                        splitList.front() > 1 ||
+                        std::any_of(possibleValues.begin(), possibleValues.end(), [&predictedValue](auto const & value){return value == predictedValue;})
+                    )
+                )
+                {
+                    isBestValueMayWin = std::any_of(possibleValues.begin(), possibleValues.end(), [&bestValue](auto const & value){return value == bestValue;});
+                    bestSplit = std::move(splitList);
+                    bestDist = std::move(bcDist);
+                    bestValue = std::move(predictedValue);
+                }
+            }
+            bestValueAndDistList.push_back(std::make_pair(bestValue, bestDist));
+        }
+    }
+
+    std::shared_ptr<TValueNode> mainNode = nullptr;
+
+    for(auto const & [bestValue, bestDist] : bestValueAndDistList)
+    {
+        auto curNode = std::make_shared<TValueNode>(bestValue, 1, possibleValues.size(), depth);
+        for (auto const & [bc, valueDist] : bestDist)
+        {
+            if (valueDist.size() > 1)
+            {
+                auto child = customMinimax(valueDist, depth + 1);
+                child->recalcSteps();
+                curNode->addChild(bc.first, bc.second, std::move(child));
+            }
+            else if (bc.first < 4)
+            {
+                auto childNode = std::make_shared<TValueNode>(valueDist.front(), 1, 1, depth + 1);
+                curNode->addChild(bc.first, bc.second, std::move(childNode));
+            }
+            else
+            {
+                auto childNode = std::make_shared<TValueNode>(bestValue, 0, 1, depth + 1);
+                curNode->addChild(bc.first, bc.second, std::move(childNode));
+            }
+        }
+        curNode->recalcSteps();
+        std::cout
+                << "calc "
+                << static_cast<uint32_t>(bestValue[0])
+                << static_cast<uint32_t>(bestValue[1])
+                << static_cast<uint32_t>(bestValue[2])
+                << static_cast<uint32_t>(bestValue[3])
+                << " "
+                << curNode->Steps()
+                << std::endl;
+        if(!mainNode || mainNode->Steps() > curNode->Steps())
+        {
+            mainNode = curNode;
+        }
+    }
+
+    if (depth == m_cashed_attempt)
+    {
+        saveNumber(mainNode->Value(), mainNode->Steps());
+    }
+    return mainNode;
+}
+
+void TMinimaxController::generatePermutations(std::vector<uint32_t>& current, std::vector<bool>& used, std::vector<std::vector<uint32_t>>& result, uint32_t n)
+{
+    if (current.size() == n) {
+        result.push_back(current);
+        return;
+    }
+
+    for (uint32_t i = 0; i < n; ++i) {
+        if (!used[i]) {
+            used[i] = true;
+            current.push_back(i);
+            generatePermutations(current, used, result, n);
+            current.pop_back();
+            used[i] = false;
+        }
+    }
+}
+
+std::vector<std::vector<uint32_t>> TMinimaxController::generateAllPositions(uint32_t n)
+{
+    std::vector<std::vector<uint32_t>> result;
+    if (n <= 0) return result;
+
+    std::vector<uint32_t> current;
+    std::vector<bool> used(n, false);
+    generatePermutations(current, used, result, n);
+
+    return result;
+}
+
+std::vector<TMinimaxController::TValue> TMinimaxController::generateEquivalentValues(std::vector<TValue> const & solvedValues)
+{
+    auto possiblePermutations = generateAllPositions(4);
+    auto possibleValues = generateAllPossibleValues();
+    std::vector<TValue> valuesSet(solvedValues.begin(), solvedValues.end());
+
+    std::set<uint8_t> newDigits;
+    for(uint8_t digit = 0; digit < 10; ++digit)
+    {
+        newDigits.emplace(digit);
+    }
+    for(auto const & value : solvedValues)
+    {
+        for(auto digit : value)
+        {
+            if(newDigits.contains(digit))
+            {
+                newDigits.erase(digit);
+            }
+        }
+    }
+    for(auto const & value : possibleValues)
+    {
+        bool isEquivalentFind = false;
+        for(auto const & perm : possiblePermutations)
+        {
+            TValue trans(10,10);
+            std::vector<TValue> solvedPermValues;
+            bool isCorrectTrans = true;
+            for(auto const & solvedValue : solvedValues)
+            {
+                TValue solvedPermValue(solvedValue.size(),0);
+                for(uint32_t i = 0; i < solvedValue.size(); ++i)
+                {
+                    solvedPermValue[i] = solvedValue[perm[i]];
+                    if(trans[solvedValue[i]] != 10 && trans[solvedValue[i]] != solvedPermValue[i])
+                    {
+                        isCorrectTrans = false;
+                        break;
+                    }
+                    trans[solvedValue[i]] = solvedPermValue[i];
+                }
+                if(!isCorrectTrans)
+                {
+                    break;
+                }
+                solvedPermValues.push_back(solvedPermValue);
+            }
+            if(!isCorrectTrans)
+            {
+                continue;
+            }
+            for(auto const & compareValue : valuesSet)
+            {
+                TValue permValue(perm.size(),0);
+                for(uint32_t i = 0; i < perm.size(); ++i)
+                {
+                    permValue[i] = compareValue[perm[i]];
+                }
+                isCorrectTrans = true;
+                for(uint32_t i = 0; i < value.size(); ++i)
+                {
+                    if(trans[value[i]] != permValue[i] && (trans[value[i]] != 10 || !newDigits.contains(permValue[i])))
+                    {
+                        isCorrectTrans = false;
+                        break;
+                    }
+                }
+                if(isCorrectTrans)
+                {
+                    isEquivalentFind = true;
+                    break;
+                }
+            }
+            if(isEquivalentFind)
+            {
+                break;
+            }
+        }
+        if(!isEquivalentFind)
+        {
+            valuesSet.push_back(value);
+        }
+    }
+    std::erase_if(
+        valuesSet,
+        [&solvedValues](auto const & value)
+        {
+            return std::any_of(solvedValues.begin(),solvedValues.end(), [&value](auto const & solvedValue){return solvedValue == value;});
+        }
+    );
+    return valuesSet;
+}
+
+std::vector<std::vector<TMinimaxController::TValue>> TMinimaxController::generateAllFirstNEquivalentValues(uint32_t N)
+{
+    std::list<std::vector<TValue>> valuesNSteps;
+    if(N == 0)
+    {
+        return std::vector<std::vector<TValue>>(valuesNSteps.begin(), valuesNSteps.end());
+    }
+    //optimize first step. all possible values on first step are equivalents
+    TValue firstValue{0, 1, 2, 3};
+    std::vector<TValue> solvedValues{firstValue};
+    valuesNSteps.push_back(solvedValues);
+    while(valuesNSteps.front().size() < N)
+    {
+        decltype(valuesNSteps) tmpValuesNSeps;
+        while(valuesNSteps.size())
+        {
+            auto solvedValues = valuesNSteps.front();
+            valuesNSteps.pop_front();
+            for(auto const & eqValue : generateEquivalentValues(solvedValues))
+            {
+                auto newSolvedValues = solvedValues;
+                newSolvedValues.push_back(eqValue);
+                tmpValuesNSeps.push_back(std::move(newSolvedValues));
+            }
+        }
+        valuesNSteps = std::move(tmpValuesNSeps);
+    }
+
+    std::cout << "For " << N << " steps needed " << valuesNSteps.size() << " different values sets" << std::endl;
+    return std::vector<std::vector<TValue>>(valuesNSteps.begin(), valuesNSteps.end());;
+}
+
+
 std::shared_ptr<TValueNode> TMinimaxController::customMinimax(TValuesList const & values, int depth)
 {
-    uint32_t optimization_size = 100;
     std::vector<std::pair<TValue, TMinimaxController::TBCDistribution>> distributionForValues;
     for (auto const & predictedValue : values)
     {
@@ -115,7 +380,7 @@ std::shared_ptr<TValueNode> TMinimaxController::customMinimax(TValuesList const 
     double bestStepCount = std::numeric_limits<uint32_t>::max();
     std::vector<std::shared_ptr<TValueNode>> nodesList;
 
-    if(depth > 7)
+    if(depth > 7) //this way definitely not best
     {
         return std::make_shared<TValueNode>(TValue(4,10), 1, bestStepCount, depth + 1);
     }
@@ -132,10 +397,6 @@ std::shared_ptr<TValueNode> TMinimaxController::customMinimax(TValuesList const 
                 bestCalcedValue = calcedValue.first;
             }
         }
-    }
-    if(values.size() > optimization_size)
-    {
-        std::shuffle(distributionForValues.begin(), distributionForValues.end(), std::default_random_engine{});
     }
     for (auto const & [predValue, distribution] : distributionForValues)
     {
@@ -175,26 +436,21 @@ std::shared_ptr<TValueNode> TMinimaxController::customMinimax(TValuesList const 
                 nodesList.clear();
             }
             nodesList.push_back(std::move(middleNode));
-            if(nodesList.size() >= 100) //forced optimiazation
-            {
-                break;
-            }
         }
     }
 
     assert(!nodesList.empty());
-
     uint32_t chosen_offset = rand() % nodesList.size();
-
     return nodesList[chosen_offset];
 }
 
 void TMinimaxController::start()
 {
-    std::vector<uint8_t> firstValue{0, 1, 2, 3};
+    std::vector<std::vector<TValue>> values3Steps = generateAllFirstNEquivalentValues(3);
+    return;
     auto possibleValues = generateAllPossibleValues();
+    TValue firstValue{0, 1, 2, 3};
     auto distributionValuesByBC = distributeValuesByBullsNCows(firstValue, possibleValues);
-
     bool loadJson = true;
     std::shared_ptr<TValueNode> mainNode;
     if (loadJson)
@@ -205,7 +461,6 @@ void TMinimaxController::start()
     {
         mainNode = std::make_shared<TValueNode>(firstValue, 1, possibleValues.size(), 1);
     }
-    possibleValues.clear();
 
     for (auto & [bc, valuesSet] : distributionValuesByBC)
     {
@@ -215,44 +470,13 @@ void TMinimaxController::start()
         }
         if (!mainNode->ContainBullsNCows(bc.first, bc.second))
         {
-            if (
-                (bc.first == 4 && bc.second == 0) ||
-                (bc.first == 0 && bc.second == 3) ||
-                (bc.first == 1 && bc.second == 2) ||
-                (bc.first == 2 && bc.second == 1) ||
-                (bc.first == 3 && bc.second == 0)
-            )
+            if ( (bc.first == 4 && bc.second == 0) )
             {
-                if (bc.first == 4)
-                {
-                    mainNode->addChild(bc.first, bc.second, std::make_shared<TValueNode>(firstValue, 0, 1, 2));
-                }
-                else
-                {
-                    TValue randomSecondValue;
-                    if(bc.first == 1 && bc.second == 2)
-                    {
-                        randomSecondValue = distributionValuesByBC[{1, 1}][rand() % distributionValuesByBC[{1, 1}].size()];
-                    }
-                    else
-                    {
-                        randomSecondValue = distributionValuesByBC[{0, 0}][rand() % distributionValuesByBC[{0, 0}].size()];
-                    }
-                    randomSecondValue = distributionValuesByBC[{2, 1}][rand() % distributionValuesByBC[{2, 1}].size()];
-                    auto secondNode = std::make_shared<TValueNode>(randomSecondValue, 1, valuesSet.size(), 2);
-                    for (auto & [bc2, valuesSet2] : distributeValuesByBullsNCows(randomSecondValue, valuesSet))
-                    {
-                        auto child = customMinimax(valuesSet2, 3);
-                        child->recalcSteps();
-                        secondNode->addChild(bc2.first, bc2.second, std::move(child));
-                    }
-                    secondNode->recalcSteps();
-                    mainNode->addChild(bc.first, bc.second, std::move(secondNode));
-                }
+                mainNode->addChild(bc.first, bc.second, std::make_shared<TValueNode>(firstValue, 0, 1, 2));
             }
             else
             {
-                auto child = customMinimax(valuesSet, 2);
+                auto child = splitingAlgorithm(distributionValuesByBC, bc, 2);
                 child->recalcSteps();
                 mainNode->addChild(bc.first, bc.second, std::move(child));
             }

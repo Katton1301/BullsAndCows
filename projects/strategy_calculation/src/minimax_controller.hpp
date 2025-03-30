@@ -27,6 +27,11 @@ public:
 private:
     TValuesList generateAllPossibleValues();
     TBCDistribution distributeValuesByBullsNCows( TValue const & predictedValue, TValuesList const & values );
+    void generatePermutations(std::vector<uint32_t>& current, std::vector<bool>& used, std::vector<std::vector<uint32_t>>& result, uint32_t n);
+    std::vector<std::vector<uint32_t>> generateAllPositions(uint32_t n);
+    std::vector<TValue> generateEquivalentValues(std::vector<TValue> const & solvedValues);
+    std::vector<std::vector<TValue>> generateAllFirstNEquivalentValues(uint32_t N);
+    std::shared_ptr<TValueNode> splitingAlgorithm(TMinimaxController::TBCDistribution const & mainDistribution, TBCPair const & checkingBC, int depth);
     std::shared_ptr<TValueNode> customMinimax(TValuesList const & values, int depth);
     void saveNumber(TValue const & number, double steps);
     void loadCashNumbers();
