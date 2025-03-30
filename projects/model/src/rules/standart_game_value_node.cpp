@@ -25,7 +25,10 @@ void TValueNode::recalcSteps()
         stepsSum += node->Steps() * node->Weight();
         weightSumm += node->Weight();
     }
-    steps = 1.0 + (stepsSum / weightSumm);
+    if(weightSumm != 0)
+    {
+        steps = 1.0 + (stepsSum / weightSumm);
+    }
 }
 
 void TValueNode::updateWeight()
