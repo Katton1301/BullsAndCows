@@ -5,7 +5,7 @@
 #include<cinttypes>
 #include <rules/standart_game_value_node.hpp>
 
-class TMinimaxController
+class TDecisionTreeGenerator
 {
 public:
     using TValue = std::vector<uint8_t>;
@@ -13,9 +13,8 @@ public:
     using TBCPair = std::pair<uint32_t, uint32_t>;
     using TBCDistribution = std::map<TBCPair, TValuesList>;
 
-    TMinimaxController() = delete;
-    TMinimaxController(int32_t number);
-    ~TMinimaxController() = default;
+    TDecisionTreeGenerator() = default;
+    ~TDecisionTreeGenerator() = default;
 
     void setLogLevel(int _log_level)
     {
@@ -31,17 +30,10 @@ private:
     std::vector<std::vector<uint32_t>> generateAllPositions(uint32_t n);
     TValuesList generateEquivalentValues(TValuesList const & solvedValues);
     std::vector<TValuesList> generateAllFirstNEquivalentValues(uint32_t N);
-    TValue splitingAlgorithm(TValuesList const & availableValues, TValuesList const & checkingValues);
+    std::set<TDecisionTreeGenerator::TValue> splitingAlgorithm(TValuesList const & availableValues, TValuesList const & checkingValues);
     std::shared_ptr<TValueNode> chooseBestEquivalentValues( TValuesList const & availableValues, TValuesList const & solvedValues );
     std::shared_ptr<TValueNode> customMinimax(TValuesList const & values, int depth);
-    void saveNumber(TValue const & number, double steps);
-    void loadCashNumbers();
 
-
-    std::map<TValue, double> const & CashNumbers() const
-    {
-        return m_numbersCash;
-    }
 
     std::vector<TValuesList> const & Values3Steps( ) const
     {
@@ -54,9 +46,6 @@ private:
     }
 
 private: //attributes
-    std::map<TValue, double> m_numbersCash{};
-    int32_t m_cashed_attempt = 2;
-    std::string m_filename{};
     int m_log_level = 1;
     std::vector<TValuesList> m_values3Steps{};
 };

@@ -1,14 +1,21 @@
-#include "thread_simulation.h"
+#include <threads/thread_simulation.h>
 #include <fstream>
 
 TSimulationThread::TSimulationThread()
-    : m_game_process(std::make_shared<TStandartGameProcess>())
-    , m_gameBrain(MODEL_COMPONENTS::TGameBrain::UNKNOWN)
-    , m_startsAmount(0)
-    , m_statisticAttempts()
 {
-    m_profilerGameProcess.setName( "Game Processor." );
+    m_profilerPlayerProcess.setName( "Game Processor." );
     m_profilerGameStep.setName( "Step Processor." );
+
+    std::random_device device;
+    random_generator_.seed(device());
+
+    m_randomByModulus =
+        [this]( uint32_t _modulus )->unsigned int
+    {
+        std::uniform_int_distribution<uint32_t> range(0, _modulus - 1);
+        return range(random_generator_);
+    };
+    m_player_process = std::make_shared<TStandartPlayerProcess>(m_randomByModulus);
 }
 
 TSimulationThread::~TSimulationThread()
@@ -20,7 +27,7 @@ void TSimulationThread::Prepare( MODEL_COMPONENTS::TGameBrain _gameBrain, uint64
     m_statisticAttempts.clear();
     if(m_gameBrain != _gameBrain)
     {
-        GameProcess_ref( ).selectBrain(_gameBrain);
+        PlayerProcess_ref( ).selectBrain(_gameBrain);
         m_gameBrain = _gameBrain;
     }
     m_startsAmount = _startAmount;
@@ -40,12 +47,12 @@ void TSimulationThread::run( )
     auto printProfiles = [this]()
     {
         std::ofstream reportProfilers( "profilers.report" );
-        reportProfilers << m_profilerGameProcess << std::endl;
+        reportProfilers << m_profilerPlayerProcess << std::endl;
         reportProfilers << m_profilerGameStep << std::endl;
         reportProfilers.close( );
     };
 
-    m_profilerGameProcess.init( );
+    m_profilerPlayerProcess.init( );
     m_profilerGameStep.init( );
 
     for(uint32_t i = 0; i < m_startsAmount; ++i)
@@ -55,22 +62,22 @@ void TSimulationThread::run( )
             m_emergency_stop = false;
             break;
         }
-        m_profilerGameProcess.start();
-        GameProcess_ref( ).Init();
-        assert( GameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER );
+        m_profilerPlayerProcess.start();
+        PlayerProcess_ref( ).Init();
+        assert( PlayerProcess_ref( ).PlayerState() == MODEL_COMPONENTS::TPlayerState::WAIT_A_NUMBER );
 
-        GameProcess_ref().setTrueGameValue( TStandartRules::Instance().GetRandomGameValue(GameProcess_ref().RandomByModulus()) );
+        PlayerProcess_ref().setTrueGameValue( TStandartRules::Instance().GetRandomGameValue(PlayerProcess_ref().GetRandom()) );
 
-        while(GameProcess_ref( ).GameStage() != MODEL_COMPONENTS::TGameStage::FINISHED)
+        while(PlayerProcess_ref( ).PlayerState() != MODEL_COMPONENTS::TPlayerState::FINISHED)
         {
-            assert( GameProcess_ref( ).GameStage() == MODEL_COMPONENTS::TGameStage::IN_PROGRESS );
+            assert( PlayerProcess_ref( ).PlayerState() == MODEL_COMPONENTS::TPlayerState::IN_PROGRESS );
             m_profilerGameStep.start();
-            GameProcess_ref().makeStep();
+            PlayerProcess_ref().makeStep();
             m_profilerGameStep.stop();
         }
-        
-        m_statisticAttempts.try_emplace(GameProcess_ref().AttemptsCount(),0);
-        ++m_statisticAttempts.at(GameProcess_ref().AttemptsCount());
+
+        m_statisticAttempts.try_emplace(PlayerProcess_ref().AttemptsCount(),0);
+        ++m_statisticAttempts.at(PlayerProcess_ref().AttemptsCount());
 
 
         if ( ( ( i + 1 ) % stepProgressBar ) == 0 )
@@ -83,7 +90,7 @@ void TSimulationThread::run( )
 
             printProfiles( );
         }
-        m_profilerGameProcess.stop();
+        m_profilerPlayerProcess.stop();
     }
 
     printProfiles( );

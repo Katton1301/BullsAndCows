@@ -7,7 +7,7 @@
 #include "ui_simulation_view.h"
 #include <memory>
 #include <string>
-#include "../threads/thread_simulation.h"
+#include <threads/thread_simulation.h>
 
 class TSimulationView : public QWidget
 {

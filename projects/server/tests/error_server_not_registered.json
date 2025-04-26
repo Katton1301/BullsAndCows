@@ -1,0 +1,15 @@
+[
+    {
+        "number": 1,
+        "request": {
+            "server_id": 1,
+            "command": 4,
+            "player_id": 1,
+            "game_id": 1
+        },
+        "result": {
+            "server_id": 0,
+            "result": 3
+        }
+    }
+]

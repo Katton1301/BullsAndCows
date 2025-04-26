@@ -1,10 +1,15 @@
-#include "standart_brain.hpp"
-#include "../game_process.hpp"
-#include "rules/standart_game_value_node.hpp"
+#include <brains/standart_brain.hpp>
+#include <player_process.hpp>
+#include <rules/standart_game_value_node.hpp>
 #include <algorithm>
+#include <numeric>
+#include <queue>
+#include <list>
 
-TStandartBrain::TStandartBrain( TStandartGameProcess const * _gameProcess )
-    : m_gameProcess_cptr(_gameProcess)
+std::string TDecisionTreeBrain::DecisionTreePath = "./bc.json";
+
+TStandartBrain::TStandartBrain( TStandartPlayerProcess const * _playerProcess )
+    : m_playerProcess_cptr(_playerProcess)
     , m_predictedValue(nullptr)
 {
 }
@@ -20,13 +25,13 @@ static std::shared_ptr<TValueNode > MainNode()
     if(!mainNode)
     {
         std::vector< uint8_t > firstValue{0,1,2,3};
-        mainNode = JSON_TOOLS::loadNodeFromJson( "./bc.json", firstValue );
+        mainNode = JSON_TOOLS::loadNodeFromJson( TDecisionTreeBrain::DecisionTreePath, firstValue );
     }
     return mainNode;
 }
 
-TStorageTreeBrain::TStorageTreeBrain( TStandartGameProcess const * _gameProcess )
-    : TStandartBrain(_gameProcess)
+TDecisionTreeBrain::TDecisionTreeBrain( TStandartPlayerProcess const * _playerProcess )
+    : TStandartBrain(_playerProcess)
 {
 
     m_digitCoins.clear();
@@ -37,26 +42,22 @@ TStorageTreeBrain::TStorageTreeBrain( TStandartGameProcess const * _gameProcess 
 
     for(uint32_t noDigit = 0; noDigit < TStandartRules::Instance().NumbersCount(); ++noDigit)
     {
-        uint32_t offsetDigit = m_gameProcess_cptr->RandomByModulus()(m_digitCoins.size() - noDigit);
-        std::swap(m_digitCoins.at(noDigit).second, m_digitCoins.at(noDigit + offsetDigit).second);
+        uint32_t offsetDigit = m_playerProcess_cptr->GetRandom()(m_digitCoins.size() - noDigit);
+        std::swap(m_digitCoins[noDigit].second, m_digitCoins[noDigit + offsetDigit].second);
     }
 }
 
-void TStorageTreeBrain::Init()
+void TDecisionTreeBrain::Init()
 {
     m_gameNode = MainNode();
-    if(m_gameNode->Childs().size() < 14)
-    {
-        std::cout << "stop" << std::endl;
-    }
 }
 
-void TStorageTreeBrain::makePredict()
+void TDecisionTreeBrain::makePredict()
 {
     std::vector<uint8_t> predectedValue;
-    if(m_gameProcess_cptr->HistoryList().size() > 0 )
+    if(m_playerProcess_cptr->HistoryList().size() > 0 )
     {
-        auto bc = m_gameProcess_cptr->HistoryList().back().second;
+        auto bc = m_playerProcess_cptr->HistoryList().back().second;
         m_gameNode = m_gameNode->ChildsAt(bc.first, bc.second);
     }
     predectedValue = m_gameNode->Value();
@@ -64,7 +65,7 @@ void TStorageTreeBrain::makePredict()
     m_predictedValue = std::make_shared<TGameValue<uint8_t>>(predectedValue);
 }
 
-void TStorageTreeBrain::flipValueCoins(std::vector<uint8_t> & value, bool isFrontSide )
+void TDecisionTreeBrain::flipValueCoins(std::vector<uint8_t> & value, bool isFrontSide )
 {
     if(isFrontSide)
     {
@@ -98,8 +99,8 @@ void TStorageTreeBrain::flipValueCoins(std::vector<uint8_t> & value, bool isFron
     }
 }
 
-TAnaliticBrain::TAnaliticBrain( TStandartGameProcess const * _gameProcess )
-    : TStandartBrain(_gameProcess)
+TAnaliticBrain::TAnaliticBrain( TStandartPlayerProcess const * _playerProcess )
+    : TStandartBrain(_playerProcess)
     , m_possibleValues()
 {
 }
@@ -111,29 +112,25 @@ void TAnaliticBrain::Init( )
 
 void TAnaliticBrain::copyPossibleValuesList( )
 {
-
     m_possibleValues.clear();
-    for(auto const & gameValue : TStandartRules::Instance().AllPossibleGameValues())
-    {
-        m_possibleValues.push_back(gameValue);
-    }
+    m_possibleValues = TStandartRules::Instance().AllPossibleGameValues();
 }
 
-TStandartRandomBrain::TStandartRandomBrain( TStandartGameProcess const * _gameProcess )
-    : TAnaliticBrain(_gameProcess)
+TStandartRandomBrain::TStandartRandomBrain( TStandartPlayerProcess const * _playerProcess )
+    : TAnaliticBrain(_playerProcess)
 {
 }
 
 void TStandartRandomBrain::makePredict( )
 {
     assert(m_possibleValues.size() > 0);
-    auto rnd_offset = m_gameProcess_cptr->RandomByModulus()(m_possibleValues.size());
-    m_predictedValue = std::make_shared<TGameValue<uint8_t>>(m_possibleValues.at(rnd_offset));
+    auto rnd_offset = m_playerProcess_cptr->GetRandom()(m_possibleValues.size());
+    m_predictedValue = std::make_shared<TGameValue<uint8_t>>(m_possibleValues[rnd_offset]);
     m_possibleValues.erase( m_possibleValues.begin() + rnd_offset );
 }
 
-TStandartStupidBrain::TStandartStupidBrain( TStandartGameProcess const * _gameProcess )
-    : TAnaliticBrain(_gameProcess)
+TStandartStupidBrain::TStandartStupidBrain( TStandartPlayerProcess const * _playerProcess )
+    : TAnaliticBrain(_playerProcess)
 {
 }
 
@@ -150,13 +147,13 @@ void TStandartStupidBrain::Init()
 void TStandartStupidBrain::makePredict( )
 {
     assert(m_possibleValues.size() > 0);
-    if(m_gameProcess_cptr->HistoryList().size() > 0 )
+    if(m_playerProcess_cptr->HistoryList().size() > 0 )
     {
         handleValuesByHistory( );
     }
 
     int32_t chosen_value_offset = -1;
-    if(m_gameProcess_cptr->HistoryList().size() < 2) //collect information
+    if(m_playerProcess_cptr->HistoryList().size() < 2) //collect information
     {
         chosen_value_offset = chooseFirstAndSecondGameValueIndex();
     }
@@ -166,13 +163,13 @@ void TStandartStupidBrain::makePredict( )
         chosen_value_offset = chooseBestGameValueOffset();
     }
     assert(chosen_value_offset >= 0);
-    m_predictedValue = std::make_shared<TGameValue<uint8_t>>(m_possibleValues.at(chosen_value_offset));
+    m_predictedValue = std::make_shared<TGameValue<uint8_t>>(m_possibleValues[chosen_value_offset]);
     m_possibleValues.erase( m_possibleValues.begin() + chosen_value_offset );
 }
 
 void TStandartStupidBrain::handleValuesByHistory( )
 {
-    auto const & handledValue = m_gameProcess_cptr->HistoryList().back();
+    auto const & handledValue = m_playerProcess_cptr->HistoryList().back();
     if(handledValue.second.first + handledValue.second.second == 0)
     {
         eraseValuesForDigits(handledValue.first.List());
@@ -237,25 +234,25 @@ void TStandartStupidBrain::leaveValuesForDigits( std::vector<uint8_t> const & di
 int32_t TStandartStupidBrain::chooseFirstAndSecondGameValueIndex()
 {
     int32_t chosen_value_offset = -1;
-    if(m_gameProcess_cptr->HistoryList().size() == 0) //choose first
+    if(m_playerProcess_cptr->HistoryList().size() == 0) //choose first
     {
-        chosen_value_offset = m_gameProcess_cptr->RandomByModulus()(m_possibleValues.size());
+        chosen_value_offset = m_playerProcess_cptr->GetRandom()(m_possibleValues.size());
     }
     else
     {
-        auto const & digits = m_gameProcess_cptr->HistoryList().back().first.List();
+        auto const & digits = m_playerProcess_cptr->HistoryList().back().first.List();
         std::vector< uint32_t > bestValueIndexes;
         for(uint32_t i = 0; i < m_possibleValues.size(); ++i)
         {
             if(
                 std::ranges::find_if(
-                    m_possibleValues.at(i).List().begin(),
-                    m_possibleValues.at(i).List().end(),
+                    m_possibleValues[i].List().begin(),
+                    m_possibleValues[i].List().end(),
                     [&digits]( auto d )
                     {
                         return std::find(digits.begin(),digits.end(),d) != digits.end();
                     }
-                ) == m_possibleValues.at(i).List().end()
+                ) == m_possibleValues[i].List().end()
             )
             {
                 bestValueIndexes.push_back(i);
@@ -263,7 +260,7 @@ int32_t TStandartStupidBrain::chooseFirstAndSecondGameValueIndex()
         }
         if(bestValueIndexes.size() > 0)
         {
-            chosen_value_offset = bestValueIndexes.at(m_gameProcess_cptr->RandomByModulus()(bestValueIndexes.size()));
+            chosen_value_offset = bestValueIndexes[m_playerProcess_cptr->GetRandom()(bestValueIndexes.size())];
         }
     }
     return chosen_value_offset;
@@ -278,12 +275,12 @@ int32_t TStandartStupidBrain::chooseBestGameValueOffset()
     for(uint32_t i = 0; i < m_possibleValues.size(); ++i)
     {
         double priority = std::accumulate(
-            m_possibleValues.at(i).List().begin(),
-            m_possibleValues.at(i).List().end(),
+            m_possibleValues[i].List().begin(),
+            m_possibleValues[i].List().end(),
             0.0,
             [this]( auto sum, auto digit )
             {
-                return sum + m_digitsPriority.at(digit);
+                return sum + m_digitsPriority[digit];
             }
         );
         if(priority >= bestPriority)
@@ -298,40 +295,39 @@ int32_t TStandartStupidBrain::chooseBestGameValueOffset()
     }
     if(bestValueIndexes.size() > 0)
     {
-        chosen_value_offset = bestValueIndexes.at(m_gameProcess_cptr->RandomByModulus()(bestValueIndexes.size()));
+        chosen_value_offset = bestValueIndexes[m_playerProcess_cptr->GetRandom()(bestValueIndexes.size())];
     }
     return chosen_value_offset;
 }
 
 void TStandartStupidBrain::calcPriority()
 {
-    std::vector<uint32_t> digitsFrequency;
-    for(uint8_t i = 0; i < TStandartRules::Instance().NumbersCount(); ++i)
+    std::vector<uint32_t> digitsFrequency(TStandartRules::Instance().NumbersCount(), 0);
+    for(auto & pair : m_digitsPriority)
     {
-        digitsFrequency.push_back(0);
-        m_digitsPriority.at(i) = 0.0;
+        pair.second = 0.0;
     }
-    for( auto const & historyItem : m_gameProcess_cptr->HistoryList())
+    for( auto const & historyItem : m_playerProcess_cptr->HistoryList())
     {
         uint32_t priority = historyItem.second.first + historyItem.second.second;
         for(auto digit : historyItem.first.List())
         {
-            ++digitsFrequency.at(digit);
-            m_digitsPriority.at(digit) += priority;
+            ++digitsFrequency[digit];
+            m_digitsPriority[digit] += priority;
         }
     }
     for(uint8_t i = 0; i < TStandartRules::Instance().NumbersCount(); ++i)
     {
-        m_digitsPriority.at(i) = digitsFrequency.at(i) > 0
-            ? m_digitsPriority.at(i) / (digitsFrequency.at(i) * digitsFrequency.at(i))
+        m_digitsPriority[i] = digitsFrequency[i] > 0
+            ? m_digitsPriority[i] / (digitsFrequency[i] * digitsFrequency[i])
             : std::numeric_limits<uint32_t>::max() / TStandartRules::Instance().ValueSize();
         ;
     }
 
 }
 
-TStandartSmartBrain::TStandartSmartBrain( TStandartGameProcess const * _gameProcess )
-    : TStandartStupidBrain(_gameProcess)
+TStandartSmartBrain::TStandartSmartBrain( TStandartPlayerProcess const * _playerProcess )
+    : TStandartStupidBrain(_playerProcess)
 {
 }
 
@@ -345,12 +341,12 @@ void TStandartSmartBrain::makePredict()
     assert(m_possibleValues.size() > 0);
     int32_t chosen_value_offset = -1;
     if(
-        m_gameProcess_cptr->HistoryList().size() > 1 ||
+        m_playerProcess_cptr->HistoryList().size() > 1 ||
         (
-            m_gameProcess_cptr->HistoryList().size() == 1 &&
+            m_playerProcess_cptr->HistoryList().size() == 1 &&
             (
-                m_gameProcess_cptr->HistoryList().back().second.first +
-                m_gameProcess_cptr->HistoryList().back().second.second !=
+                m_playerProcess_cptr->HistoryList().back().second.first +
+                m_playerProcess_cptr->HistoryList().back().second.second !=
                 TStandartRules::Instance().ValueSize() - 1
             )
         )
@@ -368,132 +364,88 @@ void TStandartSmartBrain::makePredict()
         chosen_value_offset = chooseBestGameValueOffset();
     }
     assert(chosen_value_offset >= 0);
-    m_predictedValue = std::make_shared<TGameValue<uint8_t>>(m_possibleValues.at(chosen_value_offset));
+    m_predictedValue = std::make_shared<TGameValue<uint8_t>>(m_possibleValues[chosen_value_offset]);
     m_possibleValues.erase( m_possibleValues.begin() + chosen_value_offset );
 }
 
 int32_t TStandartSmartBrain::chooseBestGameValueOffset()
 {
-    int32_t chosen_value_offset = -1;
-    std::vector< std::vector< uint32_t > >
-        digitsCountInValues(
-            TStandartRules::Instance().ValueSize(),
-            std::vector< uint32_t >(TStandartRules::Instance().NumbersCount(), 0)
+    static std::vector<std::vector<uint32_t>> digitsCountInValues(
+        TStandartRules::Instance().ValueSize(),
+        std::vector<uint32_t>(TStandartRules::Instance().NumbersCount(), 0)
         );
-
-    for(uint32_t value_offset = 0; value_offset < m_possibleValues.size(); ++value_offset)
+    for(uint32_t i = 0; i < TStandartRules::Instance().ValueSize(); ++i)
     {
-        for(uint32_t posNo = 0; posNo < m_possibleValues.at(value_offset).List().size(); ++posNo)
+        std::fill(digitsCountInValues[i].begin(), digitsCountInValues[i].end(), 0);
+    }
+    for(const auto& value : m_possibleValues)
+    {
+        for(uint32_t posNo = 0; posNo < value.List().size(); ++posNo)
         {
-            ++digitsCountInValues.at(posNo).at(m_possibleValues.at(value_offset).List().at(posNo));
+            ++digitsCountInValues[posNo][value.List()[posNo]];
         }
     }
 
-    std::vector< std::vector<uint8_t> > sortDigitsList;
+    std::priority_queue<
+        std::tuple<uint32_t, uint8_t, uint32_t>,
+        std::vector<std::tuple<uint32_t, uint8_t, uint32_t>>,
+        std::less<std::tuple<uint32_t, uint8_t, uint32_t>>
+        > sortedDigitsQueue;
     for(uint32_t posNo = 0; posNo < TStandartRules::Instance().ValueSize(); ++posNo)
     {
-        std::vector<uint8_t> sortedDigits;
-        while(true)
+        for(uint8_t d = 0; d < digitsCountInValues[posNo].size(); ++d)
         {
-            std::vector<uint8_t> bestDigits{};
-            uint32_t maxCount = 0;
-            for(uint8_t digit = 0; digit < digitsCountInValues.at(posNo).size(); ++digit)
-            {
-                if(maxCount <= digitsCountInValues.at(posNo).at(digit))
-                {
-                    if(maxCount < digitsCountInValues.at(posNo).at(digit))
-                    {
-                        maxCount = digitsCountInValues.at(posNo).at(digit);
-                        bestDigits.clear();
-                    }
-                    bestDigits.push_back(digit);
-                }
-            }
+            sortedDigitsQueue.push(std::make_tuple(digitsCountInValues[posNo][d], posNo, d));
+        }
+    }
 
-            if(maxCount == 0)
+    int32_t chosen_value_offset = -1;
+    std::vector<uint8_t> chosenGameValue(TStandartRules::Instance().ValueSize(), TStandartRules::Instance().NumbersCount());
+    std::list<uint32_t> availableIndexList(m_possibleValues.size(), 0);
+    std::iota(availableIndexList.begin(), availableIndexList.end(), 0);
+    while(sortedDigitsQueue.size() > 0)
+    {
+        auto digitsTuple = sortedDigitsQueue.top();
+        sortedDigitsQueue.pop();
+        auto pos = std::get<1>(digitsTuple);
+        auto d = std::get<2>(digitsTuple);
+        if(chosenGameValue[pos] < TStandartRules::Instance().NumbersCount())
+        {
+            continue;
+        }
+        chosenGameValue[pos] = d;
+
+
+        chosen_value_offset = availableIndexList.front();
+        for(auto it = availableIndexList.begin(); it != availableIndexList.end();)
+        {
+            if(m_possibleValues[(*it)].List()[pos] != d)
             {
-                break;
+                it = availableIndexList.erase(it);
             }
             else
             {
-                while(bestDigits.size() > 0)
-                {
-                    std::swap(
-                        bestDigits.at(m_gameProcess_cptr->RandomByModulus()(bestDigits.size())),
-                        bestDigits.back()
-                    );
-                    digitsCountInValues.at(posNo).at(bestDigits.back()) = 0;
-                    sortedDigits.push_back(bestDigits.back());
-                    bestDigits.pop_back();
-                }
+                ++it;
             }
         }
-        sortDigitsList.push_back(sortedDigits);
-    }
-
-    int32_t posNo = 0;
-    std::vector<uint32_t> digitsNumbersList(TStandartRules::Instance().ValueSize(), 0);
-    std::vector<uint8_t> chosenGameValue;
-    while(posNo > -1)
-    {
-        if(sortDigitsList.at(posNo).size() <= digitsNumbersList.at(posNo))
-        {
-            digitsNumbersList.at(posNo) = 0;
-            --posNo;
-            ++digitsNumbersList.at(posNo);
-            chosenGameValue.pop_back();
-            continue;
-        }
-
         if(
-            std::find(
-                chosenGameValue.begin(),
-                chosenGameValue.end(),
-                sortDigitsList.at(posNo).at(digitsNumbersList.at(posNo))
-            ) != chosenGameValue.end()
+            availableIndexList.size() == 0 ||
+            !std::any_of(chosenGameValue.begin(), chosenGameValue.end(), [this](auto d){return d == TStandartRules::Instance().NumbersCount();})
         )
         {
-            ++digitsNumbersList.at(posNo);
-            continue;
+            break;
         }
-
-        chosenGameValue.push_back(sortDigitsList.at(posNo).at(digitsNumbersList.at(posNo)));
-
-        if(chosenGameValue.size() == TStandartRules::Instance().ValueSize())
-        {
-            for(uint32_t valueOffset = 0; valueOffset < m_possibleValues.size(); ++valueOffset)
-            {
-                bool valueFinded = true;
-                for(uint32_t i = 0; i < m_possibleValues.at(valueOffset).List().size(); ++i)
-                {
-                    if(m_possibleValues.at(valueOffset).List().at(i) != chosenGameValue.at(i))
-                    {
-                        valueFinded = false;
-                        break;
-                    }
-                }
-                if(valueFinded)
-                {
-                    chosen_value_offset = valueOffset;
-                }
-            }
-            if(chosen_value_offset > -1)
-            {
-                break;
-            }
-            ++digitsNumbersList.at(posNo);
-            chosenGameValue.pop_back();
-        }
-        else
-        {
-            ++posNo;
-        }
-
+    }
+    if(availableIndexList.size() > 0)
+    {
+        auto rand_it = availableIndexList.begin();
+        std::advance(rand_it, m_playerProcess_cptr->GetRandom()(availableIndexList.size()));
+        chosen_value_offset = *rand_it;
     }
 
     if(chosen_value_offset < 0)
     {
-        chosen_value_offset = m_gameProcess_cptr->RandomByModulus()(m_possibleValues.size());
+        chosen_value_offset = m_playerProcess_cptr->GetRandom()(m_possibleValues.size());
     }
 
     return chosen_value_offset;
@@ -501,55 +453,43 @@ int32_t TStandartSmartBrain::chooseBestGameValueOffset()
 
 void TStandartSmartBrain::handleValuesByHistory()
 {
-    auto it = m_possibleValues.begin();
-    while( it != m_possibleValues.end() )
-    {
-        bool validValue = true;
-        for(auto const & [gameValue, bc] : m_gameProcess_cptr->HistoryList())
+    auto it = std::remove_if(
+        m_possibleValues.begin(),
+        m_possibleValues.end(),
+        [this](auto const & possibleValue)
         {
-            auto bullsNCows = TStandartRules::Instance().calculateBullsAndCows(gameValue, *it);
-            if(bullsNCows.first != bc.first || bullsNCows.second != bc.second)
+            for(auto const & [gameValue, bc] : m_playerProcess_cptr->HistoryList())
             {
-                validValue = false;
-                break;
+                auto bullsNCows = TStandartRules::Instance().calculateBullsAndCows(gameValue, possibleValue);
+                if(bullsNCows.first != bc.first || bullsNCows.second != bc.second)
+                {
+                    return true;
+                }
             }
+            return false;
         }
-        if(!validValue)
-        {
-            it = m_possibleValues.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
+    );
+    m_possibleValues.erase(it, m_possibleValues.end());
 }
 
-std::shared_ptr<TStandartBrain> createStandartBrain( TStandartGameProcess const * _gameProcess, MODEL_COMPONENTS::TGameBrain _gameBrain )
+std::shared_ptr<TStandartBrain> createStandartBrain( TStandartPlayerProcess const * _playerProcess, MODEL_COMPONENTS::TGameBrain _gameBrain )
 {
     std::shared_ptr<TStandartBrain> gameBrain = nullptr;
     switch (_gameBrain) {
     case MODEL_COMPONENTS::TGameBrain::RANDOM:
-        gameBrain = std::make_shared<TStandartRandomBrain>(_gameProcess);
+        gameBrain = std::make_shared<TStandartRandomBrain>(_playerProcess);
         break;
     case MODEL_COMPONENTS::TGameBrain::STUPID:
-        gameBrain = std::make_shared<TStandartStupidBrain>(_gameProcess);
+        gameBrain = std::make_shared<TStandartStupidBrain>(_playerProcess);
         break;
     case MODEL_COMPONENTS::TGameBrain::SMART:
-        gameBrain = std::make_shared<TStandartSmartBrain>(_gameProcess);
+        gameBrain = std::make_shared<TStandartSmartBrain>(_playerProcess);
         break;
     case MODEL_COMPONENTS::TGameBrain::BEST:
-        if(MainNode() != nullptr)
-        {
-            gameBrain = std::make_shared<TStorageTreeBrain>(_gameProcess);
-        }
-        else
-        {
-            gameBrain = std::make_shared<TStandartSmartBrain>(_gameProcess);
-        }
+        assert(MainNode());
+        gameBrain = std::make_shared<TDecisionTreeBrain>(_playerProcess);
         break;
     default:
-        gameBrain = std::make_shared<TStandartRandomBrain>(_gameProcess);
         break;
     }
     return gameBrain;

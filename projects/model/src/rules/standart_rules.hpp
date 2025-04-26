@@ -1,5 +1,5 @@
 #pragma once
-#include "core/game_value.hpp"
+#include <core/game_value.hpp>
 #include <type_traits>
 #include <set>
 #include <memory>
@@ -30,6 +30,17 @@ public:
         return 10;
     }
 
+    constexpr uint32_t AllValuesNumber( )
+    {
+        uint32_t v = NumbersCount();
+        uint32_t n = 1;
+        for(uint32_t i = 0; i < ValueSize();  ++i)
+        {
+            n *= v--;
+        }
+        return n;
+    }
+
     bool isValidGameValue( TGameValue< uint8_t > const & _gameValue );
     bool isValidGameValueList( TGameValueList const & _gameValuelist );
 
@@ -38,9 +49,15 @@ public:
 
     TGameValue<uint8_t> GetRandomGameValue( std::function< uint32_t( uint32_t ) > const & randomByModulus );
 
-    bool isWinResults( std::pair<uint32_t, uint32_t> results );
+    inline bool isWinResults( std::pair<uint32_t, uint32_t> results )
+    {
+        return results.first == ValueSize() && results.second == 0;
+    }
 
-    std::vector< TGameValue<uint8_t> > const & AllPossibleGameValues();
+    uint32_t gameValueToUint( TGameValueList const & gameValue ) const;
+    std::string gameValueToString( TGameValueList const & gameValue );
+
+    std::vector< TGameValue<uint8_t> > const & AllPossibleGameValues() const;
 
 private: //methods
     TStandartRules();

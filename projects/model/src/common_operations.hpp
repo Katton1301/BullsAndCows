@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <sstream>
-
+#include <core/enums.hpp>
 namespace COMMON_OPERATIONS
 {
 
@@ -44,6 +44,48 @@ namespace COMMON_OPERATIONS
             }
         }
         return result_id;
+    }
+
+    inline std::string GameBrainToLevelName( MODEL_COMPONENTS::TGameBrain _gameMode )
+    {
+        switch ( _gameMode ) {
+        case MODEL_COMPONENTS::TGameBrain::RANDOM :
+            return std::string("Easiest");
+            break;
+        case MODEL_COMPONENTS::TGameBrain::STUPID :
+            return std::string("Easy");
+            break;
+        case MODEL_COMPONENTS::TGameBrain::SMART :
+            return std::string("Medium");
+            break;
+        case MODEL_COMPONENTS::TGameBrain::BEST :
+            return std::string("Hard");
+            break;
+        default :
+            return std::string("UNKNOWN");
+            break;
+        }
+    }
+    inline MODEL_COMPONENTS::TGameBrain LevelNameToGameBrain( std::string _levelName )
+    {
+        if(_levelName == "Easiest")
+        {
+            return MODEL_COMPONENTS::TGameBrain::RANDOM;
+        }
+        if(_levelName == "Easy")
+        {
+            return MODEL_COMPONENTS::TGameBrain::STUPID;
+        }
+        if(_levelName == "Medium")
+        {
+            return MODEL_COMPONENTS::TGameBrain::SMART;
+        }
+        if(_levelName == "Hard")
+        {
+            return MODEL_COMPONENTS::TGameBrain::BEST;
+        }
+
+        return MODEL_COMPONENTS::TGameBrain::NONE;
     }
 }
 

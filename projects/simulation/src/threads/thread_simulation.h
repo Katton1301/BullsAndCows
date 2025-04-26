@@ -1,8 +1,8 @@
 #pragma once
-#include "core/enums.hpp"
-#include "game_process.hpp"
-#include "tools/time_profiler.hpp"
-
+#include <core/enums.hpp>
+#include <player_process.hpp>
+#include <tools/time_profiler.hpp>
+#include <random>
 #include <QtCore/QThread>
 
 
@@ -37,22 +37,24 @@ signals :
 
 private:
     void handleResults();
-    TStandartGameProcess & GameProcess_ref( )
+    TStandartPlayerProcess & PlayerProcess_ref( )
     {
-        return *m_game_process;
+        return *m_player_process;
     }
-    TStandartGameProcess & GameProcess_cref( ) const
+    TStandartPlayerProcess & PlayerProcess_cref( ) const
     {
-        return *m_game_process;
+        return *m_player_process;
     }
 
 private:
-    std::shared_ptr<TStandartGameProcess> m_game_process{};
-    MODEL_COMPONENTS::TGameBrain m_gameBrain = MODEL_COMPONENTS::TGameBrain::UNKNOWN;
-    uint64_t m_startsAmount;
+    std::mt19937 random_generator_;
+    std::function< uint32_t( uint32_t ) > m_randomByModulus;
+    std::shared_ptr<TStandartPlayerProcess> m_player_process{};
+    MODEL_COMPONENTS::TGameBrain m_gameBrain = MODEL_COMPONENTS::TGameBrain::NONE;
+    uint64_t m_startsAmount = 0;
     std::map<uint32_t, uint64_t> m_statisticAttempts{};
 
-    TTimeProfiler m_profilerGameProcess;
+    TTimeProfiler m_profilerPlayerProcess;
     TTimeProfiler m_profilerGameStep;
 
     bool m_emergency_stop = false;

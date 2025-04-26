@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <map>
-#include "standart_rules.hpp"
+#include <rules/standart_rules.hpp>
 #include <rapidjson/document.h>
 
 class TValueNode
@@ -45,10 +45,6 @@ public:
 
     std::shared_ptr<TValueNode> const & ChildsAt(int32_t bulls, uint32_t cows) const
     {
-        if(!childs.contains({bulls,cows}))
-        {
-            std::cout << "stop" << std::endl;
-        }
         return childs.at({bulls,cows});
     }
 
@@ -86,4 +82,3 @@ namespace JSON_TOOLS
     std::shared_ptr<TValueNode> loadNodeFromJsonStorage( const rapidjson::Value * storage );
     std::shared_ptr<TValueNode > loadNodeFromJson( std::string const & _path, std::vector<uint8_t> mainValue );
 }
-

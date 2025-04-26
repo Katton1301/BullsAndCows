@@ -42,7 +42,7 @@ class TTimeProfiler
         inline void stop( )
         {
             std::chrono::high_resolution_clock::time_point timeFinish = std::chrono::high_resolution_clock::now( );
-            uint64_t uiLength = std::chrono::duration_cast< std::chrono::microseconds >( timeFinish - m_timeStart ).count( );;
+            uint64_t uiLength = std::chrono::duration_cast< std::chrono::microseconds >( timeFinish - m_timeStart ).count( );
 
             setCounter( Counter( ) + 1u );
             setSummaryTime( SummaryTime( ) + uiLength );

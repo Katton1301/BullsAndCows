@@ -1,0 +1,13 @@
+[
+    {
+        "number": 1,
+        "request": {
+            "server_id": 0,
+            "command": 1
+        },
+        "result": {
+            "server_id": 0,
+            "result": 5
+        }
+    }
+]

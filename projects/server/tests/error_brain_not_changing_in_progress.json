@@ -1,0 +1,91 @@
+[
+    {
+        "number": 1,
+        "request": {
+            "server_id": 1,
+            "command": 1
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1
+        }
+    },
+    {
+        "number": 2,
+        "request": {
+            "server_id": 1,
+            "command": 4,
+            "player_id": 1,
+            "game_id": 1
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1,
+            "game_stage": "WAIT_A_NUMBER",
+            "game_id": 1,
+            "player_id": 1
+        }
+    },
+    {
+        "number": 3,
+        "request": {
+            "server_id": 1,
+            "command": 6,
+            "player_id": 1,
+            "game_id": 1,
+            "computer_id": 1,
+            "game_brain": "Hard"
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1,
+            "game_stage": "WAIT_A_NUMBER",
+            "game_id": 1,
+            "player_id": 1
+        }
+    },
+    {
+        "number": 4,
+        "request": {
+            "server_id": 1,
+            "command": 7,
+            "player_id": 1,
+            "game_id": 1
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1,
+            "game_stage": "IN_PROGRESS",
+            "game_id": 1,
+            "player_id": 1
+        }
+    },
+    {
+        "number": 5,
+        "request": {
+            "server_id": 1,
+            "command": 10,
+            "player_id": 1,
+            "game_id": 1,
+            "computer_id": 1,
+            "game_brain": "Medium"
+        },
+        "result": {
+            "server_id": 1,
+            "result": 24,
+            "game_id": 1,
+            "player_id": 1
+        }
+    },
+    {
+        "number": 6,
+        "request": {
+            "server_id": 1,
+            "command": 3
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1
+        }
+    }
+]

@@ -1,4 +1,4 @@
-#include "./views/simulation_view.h"
+#include <views/simulation_view.h>
 
 #include <QtGui>
 #include <QApplication>

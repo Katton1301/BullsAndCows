@@ -1,5 +1,5 @@
-#include "game_view.h"
-#include "common_operations.hpp"
+#include <views/game_view.h>
+#include <common_operations.hpp>
 #include <QtWidgets/QMessageBox>
 
 QTableWidgetItem * createTableItem(QString text)
@@ -10,31 +10,41 @@ QTableWidgetItem * createTableItem(QString text)
     return item;
 }
 
-inline std::string GameBrainToLevelName( MODEL_COMPONENTS::TGameBrain _gameMode )
+namespace MODEL_COMPONENTS
 {
-    switch ( _gameMode ) {
-        case MODEL_COMPONENTS::TGameBrain::RANDOM :
-            return std::string("Easiest");
+    std::ostream & operator<< ( std::ostream & stream_, TGameMode _gameMode )
+    {
+        switch( _gameMode )
+        {
+        case TGameMode::UNKNOWN    :
+            stream_ << "UNKNOWN";
             break;
-        case MODEL_COMPONENTS::TGameBrain::STUPID :
-            return std::string("Easy");
+
+        case TGameMode::PLAYER  :
+            stream_ << "PLAYER";
             break;
-        case MODEL_COMPONENTS::TGameBrain::SMART :
-            return std::string("Medium");
+
+        case TGameMode::COMPUTER  :
+            stream_ << "COMPUTER";
             break;
-        case MODEL_COMPONENTS::TGameBrain::BEST :
-            return std::string("Hard");
+
+        case TGameMode::PLAYER_VS_COMPUTER  :
+            stream_ << "PLAYER_VS_COMPUTER";
             break;
+
         default :
-            return std::string("UNKNOWN");
+            stream_ << "[Error] identifier of game mode is wrong : " << static_cast< int32_t >( _gameMode ) << std::endl;
+            assert( false && " incorrect game mode identifier" );
             break;
+        }
+        return stream_;
     }
 }
 
 TGameView::TGameView( QWidget* _parent )
     : QWidget( _parent )
-    , m_game_controller(new TGameController)
 {
+    m_game_controller = std::make_shared<TGameController>();
     ui.setupUi( this );
     ui.historyComputerTable->setColumnCount(4);
     ui.historyComputerTable->setHorizontalHeaderItem(0, createTableItem("i"));
@@ -54,41 +64,7 @@ TGameView::TGameView( QWidget* _parent )
     ui.historyPlayerTable->setRowCount(0);
     ui.historyPlayerTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
-
-    QObject::connect(
-        this,
-        SIGNAL( switchGameMode(MODEL_COMPONENTS::TGameMode) ),
-        &(*m_game_controller),
-        SLOT( gameModeSwitched(MODEL_COMPONENTS::TGameMode) )
-    );
-    QObject::connect(
-        this,
-        SIGNAL( switchGameBrain(MODEL_COMPONENTS::TGameBrain) ),
-        &(*m_game_controller),
-        SLOT( gameBrainSwitched(MODEL_COMPONENTS::TGameBrain) )
-    );
-
-    QObject::connect(
-        &(*m_game_controller),
-        SIGNAL( gameStarted(MODEL_COMPONENTS::TGameMode) ),
-        this,
-        SLOT( onGameStarted(MODEL_COMPONENTS::TGameMode) )
-    );
-
-    QObject::connect(
-        &(*m_game_controller),
-        SIGNAL( gameFinished(MODEL_COMPONENTS::TGameMode) ),
-        this,
-        SLOT( onGameFinished(MODEL_COMPONENTS::TGameMode) )
-    );
-
-    QObject::connect(
-        &(*m_game_controller),
-        SIGNAL( sendAttemptResults(MODEL_COMPONENTS::TGameMode, std::vector< uint8_t> const &, uint32_t, uint32_t, uint32_t) ),
-        this,
-        SLOT( onAttemptResults(MODEL_COMPONENTS::TGameMode, std::vector< uint8_t> const &, uint32_t, uint32_t, uint32_t) )
-    );
-
+    m_game_controller->InitGame();
 }
 
 TGameView::~TGameView( )
@@ -97,10 +73,12 @@ TGameView::~TGameView( )
 
 void TGameView::OnInitialUpdate( )
 {
+
     for(auto const & gameMode : generateGameModesList())
     {
         ui.gameModeComboBox->addItem(gameMode);
     }
+    m_game_brain = MODEL_COMPONENTS::TGameBrain::BEGIN;
     for(auto const & gameBrain : generateGameBrainsList())
     {
         ui.gameBrainComboBox->addItem(gameBrain);
@@ -109,6 +87,7 @@ void TGameView::OnInitialUpdate( )
     ui.playerHistoryFrame->setVisible(false);
     ui.digitsFrame->setVisible(false);
     ui.sendButton->setVisible(false);
+    ui.finishButton->setVisible(false);
     ui.makeStepButton->setVisible(false);
     ui.startButton->setEnabled(true);
     ui.gameModeComboBox->setEnabled(true);
@@ -116,29 +95,26 @@ void TGameView::OnInitialUpdate( )
 
 void TGameView::onStartGame()
 {
-    if(m_game_controller->GameStage() == MODEL_COMPONENTS::TGameStage::FINISHED)
-    {
-        m_game_controller->InitGame();
-    }
+    m_game_controller->InitGame();
 
     ui.historyPlayerTable->clearContents();
     ui.historyPlayerTable->setRowCount(0);
     ui.historyComputerTable->clearContents();
     ui.historyComputerTable->setRowCount(0);
 
-    ui.computerHistoryFrame->setVisible(m_game_controller->GameMode() != MODEL_COMPONENTS::TGameMode::PLAYER);
+    ui.computerHistoryFrame->setVisible(GameMode() != MODEL_COMPONENTS::TGameMode::PLAYER);
 
-    ui.playerHistoryFrame->setVisible(m_game_controller->GameMode() != MODEL_COMPONENTS::TGameMode::COMPUTER);
+    ui.playerHistoryFrame->setVisible(GameMode() != MODEL_COMPONENTS::TGameMode::COMPUTER);
+    m_winIds.clear();
 
-    m_game_controller->CreateGame();
+    auto error = m_game_controller->StartGame();
+    assert(error == TGameController::TError::OK);
     ui.startButton->setEnabled(false);
     ui.gameModeComboBox->setEnabled(false);
     ui.gameBrainComboBox->setEnabled(false);
-}
+    ui.finishButton->setVisible(false);
 
-void TGameView::onGameStarted(MODEL_COMPONENTS::TGameMode _gameMode)
-{
-    if(_gameMode == MODEL_COMPONENTS::TGameMode::COMPUTER)
+    if(GameMode() == MODEL_COMPONENTS::TGameMode::COMPUTER)
     {
         ui.digitsFrame->setVisible(false);
         ui.sendButton->setVisible(false);
@@ -152,35 +128,15 @@ void TGameView::onGameStarted(MODEL_COMPONENTS::TGameMode _gameMode)
     }
 }
 
-void TGameView::onGameFinished(MODEL_COMPONENTS::TGameMode _gameMode)
+void TGameView::gameFinished()
 {
-
-    QMessageBox messageOk;
-    std::string msgText = "Game was finished.";
-    switch(_gameMode)
-    {
-    case MODEL_COMPONENTS::TGameMode::COMPUTER:
-        msgText = "Game was finished. Computer found correct number";
-        break;
-    case MODEL_COMPONENTS::TGameMode::PLAYER:
-        msgText = "Game was finished. Player found correct number";
-        break;
-    case MODEL_COMPONENTS::TGameMode::PLAYER_VS_COMPUTER:
-        msgText = "Game was finished. Draw! Both found correct number";
-        break;
-    default:
-        break;
-    }
-
-    messageOk.setText( QString( msgText.c_str()) );
-    messageOk.exec();
-
     ui.digitsFrame->setVisible(false);
     ui.sendButton->setVisible(false);
+    ui.finishButton->setVisible(false);
     ui.makeStepButton->setVisible(false);
     ui.startButton->setEnabled(true);
     ui.gameModeComboBox->setEnabled(true);
-    ui.gameBrainComboBox->setEnabled(m_game_controller->GameMode() != MODEL_COMPONENTS::TGameMode::PLAYER);
+    ui.gameBrainComboBox->setEnabled(GameMode() != MODEL_COMPONENTS::TGameMode::PLAYER);
 }
 
 void TGameView::onSwitchGameMode([[maybe_unused]] int _currentIndex)
@@ -192,12 +148,40 @@ void TGameView::onSwitchGameMode([[maybe_unused]] int _currentIndex)
                     MODEL_COMPONENTS::TGameMode::END
                 );
     ui.gameBrainComboBox->setEnabled(gameMode != MODEL_COMPONENTS::TGameMode::PLAYER);
-    emit switchGameMode(gameMode);
+
+    m_game_controller->InitGame();
+    m_game_mode = gameMode;
+    if(GameMode() != MODEL_COMPONENTS::TGameMode::PLAYER && m_computer_game_id == 0)
+    {
+        m_computer_game_id = 2;
+        auto error = m_game_controller->addComputerProcess(m_computer_game_id, GameBrain());
+        assert(error == TGameController::TError::OK);
+    }
+
+    if(GameMode() != MODEL_COMPONENTS::TGameMode::COMPUTER && m_player_game_id == 0)
+    {
+        m_player_game_id = 1;
+        auto error = m_game_controller->addPlayerProcess(m_player_game_id);
+        assert(error == TGameController::TError::OK);
+    }
+
+    if(GameMode() == MODEL_COMPONENTS::TGameMode::PLAYER && m_computer_game_id > 0)
+    {
+        auto error = m_game_controller->removePlayerProcess(m_computer_game_id, false);
+        assert(error == TGameController::TError::OK);
+        m_computer_game_id = 0;
+    }
+
+    if(GameMode() == MODEL_COMPONENTS::TGameMode::COMPUTER && m_player_game_id > 0)
+    {
+        auto error = m_game_controller->removePlayerProcess(m_player_game_id, true);
+        assert(error == TGameController::TError::OK);
+        m_player_game_id = 0;
+    }
 }
 
 void TGameView::onSwitchGameBrain([[maybe_unused]] int _currentIndex)
 {
-
     MODEL_COMPONENTS::TGameBrain gameBrain = MODEL_COMPONENTS::TGameBrain::BEGIN;
     for (
         uint32_t id  = static_cast< uint32_t >( MODEL_COMPONENTS::TGameBrain::BEGIN );
@@ -205,29 +189,45 @@ void TGameView::onSwitchGameBrain([[maybe_unused]] int _currentIndex)
         ++id
     )
     {
-        if ( GameBrainToLevelName(static_cast< MODEL_COMPONENTS::TGameBrain >( id )) == ui.gameBrainComboBox->currentText().toStdString() )
+        if ( COMMON_OPERATIONS::GameBrainToLevelName(static_cast< MODEL_COMPONENTS::TGameBrain >( id )) == ui.gameBrainComboBox->currentText().toStdString() )
         {
             gameBrain = static_cast< MODEL_COMPONENTS::TGameBrain >( id );
             break;
         }
     }
-    emit switchGameBrain(gameBrain);
+    m_game_controller->InitGame();
+    if(GameMode() != MODEL_COMPONENTS::TGameMode::PLAYER)
+    {
+        if( m_computer_game_id == 0)
+        {
+            m_computer_game_id = 2;
+            auto error = m_game_controller->addComputerProcess(m_computer_game_id, gameBrain);
+            assert(error == TGameController::TError::OK);
+        }
+        else
+        {
+            auto error = m_game_controller->switchGameBrain( m_computer_game_id, gameBrain);
+            assert(error == TGameController::TError::OK);
+        }
+    }
 }
 
-void TGameView::onAttemptResults(MODEL_COMPONENTS::TGameMode _gameMode, std::vector< uint8_t> const & _gameValueList, uint32_t bulls, uint32_t cows, uint32_t _attemptNumber )
+void TGameView::writeResults( uint32_t _processId, std::vector< uint8_t> const & _gameValueList, uint32_t bulls, uint32_t cows, uint32_t _attemptNumber, [[maybe_unused]]bool _finished  )
 {
-    assert(
-            _gameMode == MODEL_COMPONENTS::TGameMode::COMPUTER ||
-            _gameMode == MODEL_COMPONENTS::TGameMode::PLAYER
-        );
+    QTableWidget * table = nullptr;
 
-    auto * table = _gameMode == MODEL_COMPONENTS::TGameMode::COMPUTER
-                ? ui.historyComputerTable
-                : ui.historyPlayerTable
-                ;
+    if(_processId == m_player_game_id)
+    {
+        table = ui.historyPlayerTable;
+    }
+    if(_processId == m_computer_game_id)
+    {
+        table = ui.historyComputerTable;
+    }
+    assert(table != nullptr);
 
     int newRow = table->rowCount();
-    if(_gameMode == MODEL_COMPONENTS::TGameMode::COMPUTER && _attemptNumber > 10)
+    if(_processId == m_computer_game_id && _attemptNumber > 10)
     {
         if(_attemptNumber == 11)
         {
@@ -244,7 +244,7 @@ void TGameView::onAttemptResults(MODEL_COMPONENTS::TGameMode _gameMode, std::vec
     table->setItem(newRow, 0, createTableItem(QString("%1").arg(_attemptNumber)));
     table->setItem(newRow, 1, createTableItem(QString("%1").arg(bulls)));
     table->setItem(newRow, 2, createTableItem(QString("%1").arg(cows)));
-    if(_gameMode == MODEL_COMPONENTS::TGameMode::COMPUTER)
+    if(GameMode() == MODEL_COMPONENTS::TGameMode::PLAYER_VS_COMPUTER && _processId == m_computer_game_id)
     {
         table->setItem(newRow, 3, createTableItem(QString("* * * *")));
     }
@@ -259,6 +259,76 @@ void TGameView::onAttemptResults(MODEL_COMPONENTS::TGameMode _gameMode, std::vec
     }
 }
 
+void TGameView::finishGameStep()
+{
+    for(auto const & result : m_game_controller->getStepResults(m_game_controller->GameStep()))
+    {
+        writeResults(result.processId, result.gameValueList, result.bulls, result.cows, result.step, result.finished);
+        if(result.finished)
+        {
+            QTableWidget * table = nullptr;
+
+            if(result.processId == m_player_game_id)
+            {
+                table = ui.historyPlayerTable;
+            }
+            if(result.processId == m_computer_game_id)
+            {
+                table = ui.historyComputerTable;
+            }
+            assert(table != nullptr);
+            table->item(result.step - 1, 3)->setBackground(Qt::green);
+        }
+
+    }
+    if(m_winIds.size() == 0)
+    {
+        for( auto [winId, isPlayer] : m_game_controller->WinnersId() )
+        {
+            m_winIds.push_back(winId);
+        }
+
+        if(m_winIds.size() > 0)
+        {
+            winMessageSend();
+            ui.finishButton->setVisible(true);
+        }
+    }
+}
+
+void TGameView::winMessageSend()
+{
+    uint32_t winMask = 0;
+    if(std::ranges::any_of(m_winIds, [this](auto id){ return id == m_player_game_id;}))
+    {
+        winMask += 1;
+    }
+    if(std::ranges::any_of(m_winIds, [this](auto id){ return id == m_computer_game_id;}))
+    {
+        winMask += 2;
+    }
+
+    QMessageBox messageOk;
+    std::string msgText = "Game was finished.";
+    switch(winMask)
+    {
+    case 2:
+        msgText = "Game was finished. Computer found correct number";
+        break;
+    case 1:
+        msgText = "Game was finished. Player found correct number";
+        break;
+    case 3:
+        msgText = "Game was finished. Draw! Both found correct number";
+        break;
+    default:
+        break;
+    }
+
+    messageOk.setText( QString( msgText.c_str()) );
+    messageOk.exec();
+}
+
 void TGameView::onSendGameValue()
 {
     std::vector< uint8_t > gameValueList;
@@ -267,13 +337,44 @@ void TGameView::onSendGameValue()
     gameValueList.push_back(ui.digit_3->text().toUInt());
     gameValueList.push_back(ui.digit_4->text().toUInt());
 
-    m_game_controller->PlayerStep(gameValueList);
+    auto error = m_game_controller->DoPlayerStep(m_player_game_id, gameValueList);
+    assert(error == TGameController::TError::OK);
+    finishGameStep();
+    if(
+        m_game_controller->GameStage() == MODEL_COMPONENTS::TGameStage::IN_PROGRESS_WINNER_DEFINED &&
+        std::ranges::any_of(m_winIds, [this](auto id){ return id == m_player_game_id;})
+        )
+    {
+        while(m_game_controller->GameStage() != MODEL_COMPONENTS::TGameStage::FINISHED)
+        {
+            error = m_game_controller->FinishStep();
+            assert(error == TGameController::TError::OK);
+            finishGameStep();
+        }
+    }
+    if(m_game_controller->GameStage() == MODEL_COMPONENTS::TGameStage::FINISHED)
+    {
+        gameFinished();
+    }
+}
+
+void TGameView::onFinishGame()
+{
+    m_game_controller->FinishGame();
+    gameFinished();
 }
 
 void TGameView::onMakeStep()
 {
-    m_game_controller->makeStep();
+    auto error = m_game_controller->FinishStep();
+    assert(error == TGameController::TError::OK);
+    finishGameStep();
+    if(m_game_controller->GameStage() == MODEL_COMPONENTS::TGameStage::FINISHED)
+    {
+        gameFinished();
+    }
 }
+
 
 std::vector<QString> TGameView::generateGameModesList()  const
 {
@@ -301,7 +402,7 @@ std::vector<QString> TGameView::generateGameBrainsList()  const
         ++gameBrainId
     )
     {
-        auto gameBrainStr = GameBrainToLevelName(static_cast<MODEL_COMPONENTS::TGameBrain>(gameBrainId));
+        auto gameBrainStr = COMMON_OPERATIONS::GameBrainToLevelName(static_cast<MODEL_COMPONENTS::TGameBrain>(gameBrainId));
         gameBrainsList.push_back(QString(gameBrainStr.c_str()));
     }
     return gameBrainsList;

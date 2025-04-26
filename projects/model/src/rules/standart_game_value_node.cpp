@@ -1,4 +1,4 @@
-#include "standart_game_value_node.hpp"
+#include <rules/standart_game_value_node.hpp>
 #include <fstream>
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/filewritestream.h>
@@ -85,12 +85,7 @@ namespace JSON_TOOLS
     void writeToJsonStorage( rapidjson::Document * storage, std::shared_ptr<TValueNode> const & _parentNode, rapidjson::Document * external_storage )
     {
         using namespace rapidjson;
-        uint32_t gameValue =
-                _parentNode->Value().at(0) * 1000 +
-                _parentNode->Value().at(1) * 100 +
-                _parentNode->Value().at(2) * 10 +
-                _parentNode->Value().at(3)
-            ;
+        uint32_t gameValue = TStandartRules::Instance().gameValueToUint(_parentNode->Value());
         storage->AddMember("V", Value().SetUint(gameValue), external_storage->GetAllocator());
         storage->AddMember("S", Value().SetDouble(_parentNode->Steps()), external_storage->GetAllocator());
         storage->AddMember("A", Value().SetUint(_parentNode->Depth()), external_storage->GetAllocator());
@@ -199,13 +194,7 @@ namespace JSON_TOOLS
 
         uint32_t value = json_storage["V"].GetUint();
 
-        if(
-            static_cast<uint32_t>(mainValue.at(0)) * 1000 +
-            static_cast<uint32_t>(mainValue.at(1)) * 100 +
-            static_cast<uint32_t>(mainValue.at(2)) * 10 +
-            static_cast<uint32_t>(mainValue.at(3))
-            != value
-        )
+        if( TStandartRules::Instance().gameValueToUint(mainValue) != value )
         {
             return nullptr;
         }

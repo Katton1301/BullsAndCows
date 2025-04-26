@@ -1,0 +1,110 @@
+[
+    {
+        "number": 1,
+        "request": {
+            "server_id": 1,
+            "command": 1
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1
+        }
+    },
+    {
+        "number": 2,
+        "request": {
+            "server_id": 1,
+            "command": 4,
+            "player_id": 1,
+            "game_id": 1
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1,
+            "game_stage": "WAIT_A_NUMBER",
+            "game_id": 1,
+            "player_id": 1
+        }
+    },
+    {
+        "number": 3,
+        "request": {
+            "server_id": 1,
+            "command": 5,
+            "player_id": 2,
+            "game_id": 1
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1,
+            "game_stage": "WAIT_A_NUMBER",
+            "game_id": 1,
+            "player_id": 2
+        }
+    },
+    {
+        "number": 4,
+        "request": {
+            "server_id": 1,
+            "command": 7,
+            "player_id": 1,
+            "game_id": 1,
+            "game_value": 1234
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1,
+            "game_stage": "IN_PROGRESS",
+            "game_id": 1,
+            "player_id": 1
+        }
+    },
+    {
+        "number": 5,
+        "request": {
+            "server_id": 1,
+            "command": 8,
+            "player_id": 1,
+            "game_id": 1,
+            "game_value": 1235
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1,
+            "game_stage": "IN_PROGRESS",
+            "game_id": 1,
+            "player_id": 1,
+            "place": 0,
+            "bulls": 3,
+            "cows": 0,
+            "step": 1
+        }
+    },
+    {
+        "number": 6,
+        "request": {
+            "server_id": 1,
+            "command": 8,
+            "player_id": 1,
+            "game_id": 1,
+            "game_value": 1234
+        },
+        "result": {
+            "server_id": 1,
+            "result": 20,
+            "game_id": 1,
+            "player_id": 1
+        }
+    },
+    {
+        "number": 7,
+        "request": {
+            "server_id": 1,
+            "command": 3
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1
+        }
+    }
+]

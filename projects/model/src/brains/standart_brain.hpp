@@ -1,31 +1,33 @@
 #pragma once
-#include "brains/brain_interface.hpp"
-#include "core/game_value.hpp"
-#include "core/enums.hpp"
+#include <brains/brain_interface.hpp>
+#include <core/game_value.hpp>
+#include <core/enums.hpp>
 #include <memory>
 #include <map>
-class TStandartGameProcess;
+class TStandartPlayerProcess;
 class TValueNode;
 
 struct TStandartBrain : public IGameBrain
 {
     TStandartBrain() = delete;
-    TStandartBrain( TStandartGameProcess const * _gameProcess );
+    TStandartBrain( TStandartPlayerProcess const * _playerProcess );
     ~TStandartBrain() = default;
 
     std::shared_ptr<TGameValue<uint8_t>> const & PredictedValue() const;
 
 protected:
-    TStandartGameProcess const *  m_gameProcess_cptr = nullptr;
+    TStandartPlayerProcess const *  m_playerProcess_cptr = nullptr;
     std::shared_ptr<TGameValue<uint8_t>> m_predictedValue{};
 };
 
-class TStorageTreeBrain : public TStandartBrain
+class TDecisionTreeBrain : public TStandartBrain
 {
 public:
-    TStorageTreeBrain() = delete;
-    TStorageTreeBrain( TStandartGameProcess const * _gameProcess );
-    ~TStorageTreeBrain() = default;
+    static std::string DecisionTreePath;
+
+    TDecisionTreeBrain() = delete;
+    TDecisionTreeBrain( TStandartPlayerProcess const * _playerProcess );
+    ~TDecisionTreeBrain() = default;
 
     virtual void Init() override;
     virtual void makePredict( ) override;
@@ -42,7 +44,7 @@ class TAnaliticBrain : public TStandartBrain
 {
 public:
     TAnaliticBrain() = delete;
-    TAnaliticBrain( TStandartGameProcess const * _gameProcess );
+    TAnaliticBrain( TStandartPlayerProcess const * _playerProcess );
     ~TAnaliticBrain() = default;
 
     virtual void Init() override;
@@ -58,7 +60,7 @@ class TStandartRandomBrain : public TAnaliticBrain
 {
 public:
     TStandartRandomBrain() = delete;
-    TStandartRandomBrain( TStandartGameProcess const * _gameProcess );
+    TStandartRandomBrain( TStandartPlayerProcess const * _playerProcess );
     ~TStandartRandomBrain() = default;
 
     virtual void makePredict( ) override;
@@ -68,7 +70,7 @@ class TStandartStupidBrain : public TAnaliticBrain
 {
 public:
     TStandartStupidBrain() = delete;
-    TStandartStupidBrain( TStandartGameProcess const * _gameProcess );
+    TStandartStupidBrain( TStandartPlayerProcess const * _playerProcess );
     ~TStandartStupidBrain() = default;
 
     virtual void Init( ) override;
@@ -91,7 +93,7 @@ class TStandartSmartBrain : public TStandartStupidBrain
 {
 public:
     TStandartSmartBrain() = delete;
-    TStandartSmartBrain( TStandartGameProcess const * _gameProcess );
+    TStandartSmartBrain( TStandartPlayerProcess const * _playerProcess );
     ~TStandartSmartBrain() = default;
 
     virtual void Init( ) override;
@@ -101,4 +103,4 @@ protected:
     virtual int32_t chooseBestGameValueOffset() override;
 };
 
-std::shared_ptr<TStandartBrain> createStandartBrain( TStandartGameProcess const * _gameProcess, MODEL_COMPONENTS::TGameBrain _gameBrain );
+std::shared_ptr<TStandartBrain> createStandartBrain( TStandartPlayerProcess const * _playerProcess, MODEL_COMPONENTS::TGameBrain _gameBrain );

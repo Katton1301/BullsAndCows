@@ -1,5 +1,5 @@
-#include "standart_rules.hpp"
-
+#include <rules/standart_rules.hpp>
+#include<numeric>
 
 TStandartRules::TStandartRules()
 {
@@ -17,11 +17,11 @@ bool TStandartRules::isValidGameValue( TGameValue< uint8_t > const & _gameValue 
 
 bool TStandartRules::isValidGameValueList( TGameValueList const & _gameValuelist )
 {
-    std::set<uint8_t> uniqList;
     if(_gameValuelist.size() != ValueSize())
     {
         return false;
     }
+    std::set<uint8_t> uniqList;
     for( auto digit : _gameValuelist )
     {
         if(digit >= NumbersCount() || uniqList.contains(digit))
@@ -33,6 +33,27 @@ bool TStandartRules::isValidGameValueList( TGameValueList const & _gameValuelist
     return true;
 }
 
+uint32_t TStandartRules::gameValueToUint( TGameValueList const & gameValue ) const
+{
+    uint32_t n = 0;
+    for(auto digit : gameValue)
+    {
+        n = n * 10 + static_cast<uint32_t>(digit);
+    }
+    return n;
+}
+
+std::string TStandartRules::gameValueToString( TGameValueList const & gameValue )
+{
+    std::string s;
+    s.resize(ValueSize());
+    for(uint32_t i = 0; i < ValueSize(); ++i)
+    {
+        s[i] = static_cast<uint32_t>(gameValue[i]);
+    }
+    return s;
+}
+
 std::pair<uint32_t, uint32_t> TStandartRules::calculateBullsAndCows( TGameValue<uint8_t> const & _predictedValue, TGameValue<uint8_t> const & _trueValue)
 {
     return calculateBullsAndCows(_predictedValue.List(), _trueValue.List() );
@@ -42,48 +63,44 @@ std::pair<uint32_t, uint32_t> TStandartRules::calculateBullsAndCows( TGameValueL
 {
     uint32_t bulls = 0;
     uint32_t cows = 0;
+    uint16_t mask = 0;
     for(uint32_t i = 0; i < ValueSize( ); ++i)
     {
-        for(uint32_t j = 0; j < ValueSize( ); ++j)
+        if(_predictedValue[i] == _trueValue[i])
         {
-            if(_predictedValue.at(i) == _trueValue.at(j))
-            {
-                if(i == j)
-                {
-                    ++bulls;
-                }
-                else
-                {
-                    ++cows;
-                }
-                break;
-            }
+            ++bulls;
+        }
+        else
+        {
+            mask |= 1 << _trueValue[i];
         }
     }
-    return std::make_pair(bulls,cows);
+    for(uint32_t i = 0; i < ValueSize( ); ++i)
+    {
+        if(_predictedValue[i] != _trueValue[i] && (mask & (1 << _predictedValue[i])))
+        {
+            ++cows;
+        }
+    }
+    return {bulls,cows};
 }
 
 TGameValue<uint8_t> TStandartRules::GetRandomGameValue( std::function< uint32_t( uint32_t ) > const & randomByModulus )
 {
-    TGameValueList uniqList;
-    for(uint8_t i = 0; i < NumbersCount(); ++i)
-    {
-        uniqList.push_back(i);
-    }
+    static TGameValueList uniqList(NumbersCount(),0);
+    std::iota(uniqList.begin(),uniqList.end(), 0);
     std::vector<uint8_t> gameValueList;
+    gameValueList.reserve(ValueSize());
+    uint32_t randOffset = randomByModulus(AllValuesNumber());
+    uint32_t randPos;
     for(uint32_t i = 0; i < ValueSize( ); ++i)
     {
-       uint32_t randPos = randomByModulus( uniqList.size() );
-       std::swap(uniqList.at(randPos), uniqList.back());
-       gameValueList.push_back(uniqList.back());
-       uniqList.pop_back();
+        randPos = randOffset % (NumbersCount() - i);
+        randOffset /= (NumbersCount() - i);
+        gameValueList.push_back(uniqList[randPos]);
+        std::swap(uniqList[randPos], uniqList[NumbersCount() - i - 1]);
     }
     return TGameValue(gameValueList);
-}
-
-bool TStandartRules::isWinResults( std::pair<uint32_t, uint32_t> results )
-{
-    return results.first == ValueSize() && results.second == 0;
 }
 
 void TStandartRules::fillPossibleValuesList( )
@@ -113,7 +130,7 @@ void TStandartRules::fillPossibleValuesList( )
     }
 }
 
-std::vector< TGameValue<uint8_t> > const & TStandartRules::AllPossibleGameValues()
+std::vector< TGameValue<uint8_t> > const & TStandartRules::AllPossibleGameValues() const
 {
     return m_possibleValues;
 }

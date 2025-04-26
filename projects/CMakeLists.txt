@@ -23,17 +23,20 @@ else()
 endif()
 add_compile_options( -mno-ms-bitfields )
 
-
 get_property(include_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
 get_property(linker_options DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY LINK_OPTIONS)
 
 set(MODEL_TARGET_NAME "${PROJECT_NAME}.Model")
 message(STATUS "[model] target name: ${MODEL_TARGET_NAME}")
 
+message(STATUS "current dir: ${CMAKE_CURRENT_BINARY_DIR}")
+file(COPY "${CMAKE_CURRENT_LIST_DIR}/binaries/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/")
+
 include(model/BullsAndCows.Model.cmake)
 include(game_view/BullsAndCows.GameView.cmake)
 include(simulation/BullsAndCows.Simulation.cmake)
-include(strategy_calculation/BullsAndCows.StrategyCalculation.cmake)
+include(decision_tree_generator/BullsAndCows.DecisionTreeGenerator.cmake)
+include(server/BullsAndCows.Server.cmake)
 enable_testing()
 add_subdirectory(tests)
 

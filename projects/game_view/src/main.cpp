@@ -1,4 +1,4 @@
-#include "./views/game_view.h"
+#include <views/game_view.h>
 
 #include <QtGui>
 #include <QApplication>

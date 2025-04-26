@@ -179,11 +179,25 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="sendButton">
-         <property name="text">
-          <string>Send</string>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="topMargin">
+          <number>0</number>
          </property>
-        </widget>
+         <item>
+          <widget class="QPushButton" name="sendButton">
+           <property name="text">
+            <string>Send</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="finishButton">
+           <property name="text">
+            <string>Finish Game</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QPushButton" name="makeStepButton">
@@ -266,6 +280,22 @@
    </hints>
   </connection>
   <connection>
+   <sender>finishButton</sender>
+   <signal>clicked()</signal>
+   <receiver>TFormMainView</receiver>
+   <slot>onFinishGame()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>makeStepButton</sender>
    <signal>clicked()</signal>
    <receiver>TFormMainView</receiver>
@@ -287,6 +317,7 @@
   <slot>onSwitchGameBrain(int)</slot>
   <slot>onStartGame()</slot>
   <slot>onSendGameValue()</slot>
+  <slot>onFinishGame()</slot>
   <slot>onMakeStep()</slot>
  </slots>
 </ui>

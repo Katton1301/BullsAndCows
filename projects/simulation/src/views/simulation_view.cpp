@@ -1,5 +1,5 @@
-#include "simulation_view.h"
-#include "common_operations.hpp"
+#include <views/simulation_view.h>
+#include <common_operations.hpp>
 #include <QtWidgets/QMessageBox>
 
 QTableWidgetItem * createTableItem(QString text)
