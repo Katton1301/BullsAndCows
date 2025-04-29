@@ -47,9 +47,9 @@ SERVER_COMPONENTS::TResult ConvertGameErrorToServerResult( TGameController::TErr
 }
 
 
-TEventProcessor::TEventProcessor(TEventManager& manager/*, RdKafka::Producer* kafka_producer*/)
+TEventProcessor::TEventProcessor(TEventManager& manager, RdKafka::Producer* kafka_producer)
     : m_manager(manager)
-    //, m_kafka_producer(kafka_producer)
+    , m_kafka_producer(kafka_producer)
     , m_serverState(SERVER_COMPONENTS::TServerState::WAIT_REGISTRATION)
     , m_serverId(0)
     , m_running(false)
@@ -669,10 +669,14 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
     return result;
 }
 
+
 void TEventProcessor::sendToKafka(const std::string& message)
 {
-    std::cout << "Sent to Kafka: " << message << std::endl;
-    /*if (!m_kafka_producer) return;
+    if (!m_kafka_producer) 
+    {
+        std::cerr << "Kafka producer is not initialized" << std::endl;
+        return;
+    }
 
     RdKafka::ErrorCode resp = m_kafka_producer->produce(
         "response_topic",
@@ -684,14 +688,16 @@ void TEventProcessor::sendToKafka(const std::string& message)
         0,
         0,
         nullptr
-        );
+    );
 
     if (resp != RdKafka::ERR_NO_ERROR)
     {
-        std::cout << "Kafka produce failed: " << RdKafka::err2str(resp) << std::endl;
+        std::cerr << "Kafka produce failed: " << RdKafka::err2str(resp) << std::endl;
     }
     else
     {
-        std::cout << "Sent to Kafka: " << message << std::endl;
-    }*/
+        std::cout << "Successfully sent message to Kafka: " << message << std::endl;
+    }
+
+    m_kafka_producer->poll(0);
 }

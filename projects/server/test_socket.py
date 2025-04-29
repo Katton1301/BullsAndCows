@@ -102,7 +102,7 @@ if __name__ == "__main__":
     if args.t:
         print('Start testing a Bulls And Cows Server')
         test_process('./tests/')
-    if args.b:
+    elif args.b:
         print('Start self made tests')
         while True:
             construct_test()
