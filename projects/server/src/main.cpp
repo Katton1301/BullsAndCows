@@ -1,10 +1,22 @@
 #include <connection/server.hpp>
 #include <librdkafka/rdkafkacpp.h>
+#include <csignal>
+#include <atomic>
 
-RdKafka::Producer* CreateKafkaProducer(const std::string& brokers) 
+std::atomic<bool> running{true};
+
+void signal_handler([[maybe_unused]]int signal)
+{
+    running = false;
+}
+
+RdKafka::Producer* CreateKafkaProducer() 
 {
     std::string errstr;
     RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+    
+    const char* brokers = std::getenv("KAFKA_BOOTSTRAP_SERVERS");
+    if (!brokers) brokers = "localhost:9092";
     
     if (conf->set("bootstrap.servers", brokers, errstr) != RdKafka::Conf::CONF_OK) {
         std::cerr << "Failed to set bootstrap.servers: " << errstr << std::endl;
@@ -25,39 +37,59 @@ RdKafka::Producer* CreateKafkaProducer(const std::string& brokers)
     return producer;
 }
 
-int main()
+int main() 
 {
+    std::signal(SIGINT, signal_handler);
+    std::signal(SIGTERM, signal_handler);
+
     try 
     {
-        const std::string brokers = "kafka:9092";
-        RdKafka::Producer* kafka_producer = CreateKafkaProducer(brokers);
-        if (!kafka_producer)
+        RdKafka::Producer* kafka_producer = CreateKafkaProducer();
+        if (!kafka_producer) 
         {
             std::cerr << "Failed to initialize Kafka producer" << std::endl;
             return 1;
         }
         TEventManager manager;
-        
+
         TEventProcessor processor(manager, kafka_producer);
         processor.start();
 
         TServer server(manager);
         server.start();
 
+        std::cout << "Server started successfully. Press Ctrl+C to stop..." << std::endl;
+
+        while (running) 
+        {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+
+            if (kafka_producer->outq_len() > 0) 
+            {
+                kafka_producer->poll(0);
+            }
+        }
+
+        // Грациозное завершение
+        std::cout << "Shutting down server..." << std::endl;
         processor.stop();
-        
-        while (kafka_producer->outq_len() > 0) {
-            std::cerr << "Waiting for " << kafka_producer->outq_len() << std::endl;
+        server.stop();
+
+        while (kafka_producer->outq_len() > 0) 
+        {
+            std::cout << "Waiting for " << kafka_producer->outq_len()
+                      << " pending messages..." << std::endl;
             kafka_producer->poll(1000);
         }
+
         delete kafka_producer;
-        
-        server.stop();
+        std::cout << "Server stopped successfully" << std::endl;
     }
-    catch (std::exception const & e) {
+    catch (std::exception const & e) 
+    {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
-    
+
     return 0;
 }

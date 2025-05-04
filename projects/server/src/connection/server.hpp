@@ -5,8 +5,9 @@
 #include <vector>
 #include <atomic>
 #include <mutex>
+#include <cstdlib> // для getenv
 
-class TServer // возможно стоит переименовать в TKafkaServer
+class TServer
 {
 public:
     enum
@@ -26,6 +27,8 @@ private:
     void consumeMessages(int thread_id);
     void handleKafkaMessage(RdKafka::Message* message, int thread_id);
 
+    std::string getEnvVar(const std::string& name, const std::string& defaultValue = "");
+
     TEventManager& m_manager;
     std::vector<std::thread> m_consumer_threads;
     std::mutex m_thread_mutex;
@@ -34,4 +37,7 @@ private:
     // Kafka-related members
     std::shared_ptr<RdKafka::Conf> m_kafka_conf;
     std::vector<RdKafka::KafkaConsumer*> m_kafka_consumers;
+    std::string m_kafka_brokers;
+    std::string m_kafka_topic;
+    std::string m_kafka_group_id;
 };

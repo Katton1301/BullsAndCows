@@ -1,10 +1,18 @@
 #include <connection/server.hpp>
 #include <iostream>
 
+std::string TServer::getEnvVar(const std::string& name, const std::string& defaultValue) {
+    const char* value = std::getenv(name.c_str());
+    return value ? value : defaultValue;
+}
+
 TServer::TServer(TEventManager& manager)
     : m_manager(manager)
     , m_is_running(false)
     , m_kafka_conf(RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL))
+    , m_kafka_brokers(getEnvVar("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"))
+    , m_kafka_topic(getEnvVar("KAFKA_TOPIC", "game_command"))
+    , m_kafka_group_id(getEnvVar("KAFKA_GROUP_ID", "server_group"))
 {
 }
 
@@ -48,16 +56,38 @@ void TServer::stop()
 void TServer::setupKafkaConsumer()
 {
     std::string errstr;
-    std::string brokers = "kafka:9092";
-    std::string topic_name = "game_command";
-    std::string group_id = "server_group";
 
-    if (m_kafka_conf->set("bootstrap.servers", brokers, errstr) != RdKafka::Conf::CONF_OK) 
+    if (m_kafka_conf->set("session.timeout.ms", "30000", errstr) != RdKafka::Conf::CONF_OK)
+    {
+        throw std::runtime_error("Failed to set session.timeout.ms: " + errstr);
+    }
+    
+    if (m_kafka_conf->set("max.poll.interval.ms", "300000", errstr) != RdKafka::Conf::CONF_OK)
+    {
+        throw std::runtime_error("Failed to set max.poll.interval.ms: " + errstr);
+    }
+    
+    if (m_kafka_conf->set("request.timeout.ms", "30000", errstr) != RdKafka::Conf::CONF_OK)
+    {
+        throw std::runtime_error("Failed to set request.timeout.ms: " + errstr);
+    }
+    
+    if (m_kafka_conf->set("heartbeat.interval.ms", "3000", errstr) != RdKafka::Conf::CONF_OK)
+    {
+        throw std::runtime_error("Failed to set heartbeat.interval.ms: " + errstr);
+    }
+
+    if (m_kafka_conf->set("log_level", "3", errstr) != RdKafka::Conf::CONF_OK)
+    {  // 3 = DEBUG
+        throw std::runtime_error("Failed to set log level: " + errstr);
+    }
+
+    if (m_kafka_conf->set("bootstrap.servers", m_kafka_brokers, errstr) != RdKafka::Conf::CONF_OK) 
     {
         throw std::runtime_error("Failed to set bootstrap.servers: " + errstr);
     }
 
-    if (m_kafka_conf->set("group.id", group_id, errstr) != RdKafka::Conf::CONF_OK) 
+    if (m_kafka_conf->set("group.id", m_kafka_group_id, errstr) != RdKafka::Conf::CONF_OK) 
     {
         throw std::runtime_error("Failed to set group.id: " + errstr);
     }
@@ -75,7 +105,6 @@ void TServer::setupKafkaConsumer()
 void TServer::startConsumers()
 {
     std::string errstr;
-    std::string topic_name = "game_command";
     
     for (int i = 0; i < MAX_THREADS; ++i) 
     {
@@ -85,7 +114,7 @@ void TServer::startConsumers()
             throw std::runtime_error("Failed to create Kafka consumer: " + errstr);
         }
 
-        std::vector<std::string> topics = {topic_name};
+        std::vector<std::string> topics = {m_kafka_topic};
         RdKafka::ErrorCode err = consumer->subscribe(topics);
         if (err) 
         {
@@ -102,47 +131,59 @@ void TServer::startConsumers()
         );
     }
 }
-
 void TServer::consumeMessages(int thread_id)
 {
     RdKafka::KafkaConsumer* consumer = m_kafka_consumers[thread_id];
-    
-    while (m_is_running) {
-        RdKafka::Message* msg = consumer->consume(1000);
-        switch (msg->err()) 
+
+    while (m_is_running)
+    {
+        try
         {
-            case RdKafka::ERR__TIMED_OUT:
-                delete msg;
-                continue;
-                
-            case RdKafka::ERR_NO_ERROR:
-                handleKafkaMessage(msg, thread_id);
-                break;
-                
-            case RdKafka::ERR__PARTITION_EOF:
-                delete msg;
-                continue;
-                
-            case RdKafka::ERR__UNKNOWN_TOPIC:
-            case RdKafka::ERR__UNKNOWN_PARTITION:
-                std::cerr << "Thread " << thread_id << ": Topic/partition not found" << std::endl;
-                delete msg;
-                continue;
-                
-            default:
-                std::cerr << "Thread " << thread_id << ": Consumer error: " << msg->errstr() << std::endl;
-                delete msg;
-                continue;
+            RdKafka::Message* msg = consumer->consume(1000);
+            switch (msg->err())
+            {
+                case RdKafka::ERR__TIMED_OUT:
+                    delete msg;
+                    continue;
+
+                case RdKafka::ERR_NO_ERROR:
+                    handleKafkaMessage(msg, thread_id);
+                    break;
+
+                case RdKafka::ERR__PARTITION_EOF:
+                    delete msg;
+                    continue;
+
+                case RdKafka::ERR__UNKNOWN_TOPIC:
+                case RdKafka::ERR__UNKNOWN_PARTITION:
+                    std::cerr << "Thread " << thread_id << ": Topic/partition not found" << std::endl;
+                    delete msg;
+                    continue;
+
+                default:
+                    std::cerr << "Thread " << thread_id << ": Consumer error: " << msg->errstr() << std::endl;
+                    delete msg;
+                    continue;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Consumer thread " << thread_id
+                     << " error: " << e.what() << std::endl;
+            if (m_is_running)
+            {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
         }
     }
 }
+
 void TServer::handleKafkaMessage(RdKafka::Message* message, int thread_id)
 {
     try 
     {
         const std::string payload(static_cast<const char*>(message->payload()), message->len());
         std::cout << "Thread " << thread_id << " received message: " << payload << std::endl;
-
         int event_id = m_manager.addEvent(payload);
         
         std::string response;
