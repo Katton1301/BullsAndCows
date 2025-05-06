@@ -180,25 +180,16 @@ void TServer::consumeMessages(int thread_id)
 
 void TServer::handleKafkaMessage(RdKafka::Message* message, int thread_id)
 {
-    try 
+    try
     {
         const std::string payload(static_cast<const char*>(message->payload()), message->len());
         std::cout << "Thread " << thread_id << " received message: " << payload << std::endl;
         int event_id = m_manager.addEvent(payload);
-        
-        std::string response;
-        while (m_is_running && response.empty()) 
+
+        std::pair<bool, std::string> response = m_manager.getEventResponse(event_id);
+        if(response.first)
         {
-            response = m_manager.getEventResponse(event_id);
-            if (response.empty()) 
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            }
-        }
-        
-        if (!response.empty()) 
-        {
-            std::cout << "Thread " << thread_id << " processed message, response: " << response << std::endl;
+            std::cout << "Thread " << thread_id << " processed message, response: " << response.second << std::endl;
         }
         
         m_manager.removeEvent(event_id);

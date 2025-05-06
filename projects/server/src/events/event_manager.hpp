@@ -14,7 +14,7 @@ public:
     int addEvent(const std::string& data);
     std::shared_ptr<TEvent> getNextEvent();
     void setEventResponse(int id, const std::string& response);
-    std::string getEventResponse(int id);
+    std::pair<bool, std::string> getEventResponse(int id);
     void removeEvent(int id);
     void stop();
 

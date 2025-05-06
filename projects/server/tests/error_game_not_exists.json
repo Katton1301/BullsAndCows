@@ -32,7 +32,8 @@
             "server_id": 1,
             "command": 7,
             "player_id": 1,
-            "game_id": 2
+            "game_id": 2,
+            "game_value": 1234
         },
         "result": {
             "server_id": 1,

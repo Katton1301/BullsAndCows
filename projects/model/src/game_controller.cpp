@@ -4,6 +4,7 @@ TGameController::TGameController()
 {
     std::random_device device;
     random_generator_.seed(device());
+    m_secretValue.clear();
 
     m_randomByModulus =
         [this]( uint32_t _modulus )->unsigned int
@@ -21,6 +22,11 @@ TGameController::~TGameController()
 uint32_t TGameController::PlayersCount( ) const
 {
     return PlayerList().size() + ComputerList().size();
+}
+
+std::vector<uint8_t> TGameController::SecretValue() const
+{
+    return m_secretValue;
 }
 
 MODEL_COMPONENTS::TGameStage TGameController::GameStage() const
@@ -53,6 +59,7 @@ void TGameController::InitGame()
     m_game_step = 0;
     m_winnersId.clear();
     m_gameStage = MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER;
+    m_secretValue.clear();
     for(auto & [gameId, playerProcess] : m_player_list)
     {
         playerProcess->Init();
@@ -65,6 +72,7 @@ void TGameController::InitGame()
 
 TGameController::TError TGameController::StartGame( std::vector<uint8_t> const & secretValue )
 {
+    m_secretValue = secretValue;
     if(GameStage() != MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER)
     {
         return TError::GAME_BUSY;

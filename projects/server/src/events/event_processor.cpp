@@ -108,7 +108,7 @@ void TEventProcessor::processEvents()
             auto resultMessage = SERVER_COMPONENTS::SerializeResultToKafkaMessage(result);
             sendToKafka(resultMessage);
             m_manager.setEventResponse(event->getId(), resultMessage);
-            m_manager.removeEvent(event->getId());
+            //m_manager.removeEvent(event->getId());
         }
     }
 }
@@ -341,6 +341,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
             {
                 if(!TStandartRules::Instance().isValidGameValue(request.GameValue))
                 {
+                    result.GameValue = request.GameValue;
                     result.Result = SERVER_COMPONENTS::TResult::ERROR_INVALID_SECRET_VALUE;
                     break;
                 }
@@ -360,6 +361,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                     break;
                 }
             }
+            result.GameValue = game->SecretValue();
             result.GameStage = game->GameStage();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }
@@ -596,7 +598,15 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 }
                 player->removeGame(request.GameId);
             }
-            result.GameStage = game->GameStage();
+            if(game->PlayersCount() == 0)
+            {
+                TDataStorage::Instance().removeGame(request.GameId);
+                result.GameStage = MODEL_COMPONENTS::TGameStage::UNKNOWN;
+            }
+            else
+            {
+                result.GameStage = game->GameStage();
+            }
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }
         break;
@@ -668,7 +678,6 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
     }
     return result;
 }
-
 
 void TEventProcessor::sendToKafka(const std::string& message)
 {

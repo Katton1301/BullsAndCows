@@ -36,19 +36,17 @@ std::shared_ptr<TEvent> TEventManager::getNextEvent()
 void TEventManager::setEventResponse(int id, const std::string& response)
 {
     std::shared_ptr<TEvent> event;
+    std::lock_guard<std::mutex> lock(m_events_mutex);
+    auto it = m_events.find(id);
+    if (it == m_events.end())
     {
-        std::lock_guard<std::mutex> lock(m_events_mutex);
-        auto it = m_events.find(id);
-        if (it == m_events.end())
-        {
-            return;
-        }
-        event = it->second;
+        return;
     }
+    event = it->second;
     event->setResponse(response);
 }
 
-std::string TEventManager::getEventResponse(int id)
+std::pair<bool, std::string> TEventManager::getEventResponse(int id)
 {
     std::shared_ptr<TEvent> event;
     {
@@ -56,11 +54,11 @@ std::string TEventManager::getEventResponse(int id)
         auto it = m_events.find(id);
         if (it == m_events.end())
         {
-            return "Event not found";
+            return std::make_pair( false, "Event not found" );
         }
         event = it->second;
     }
-    return  event->waitForResponse();
+    return  std::make_pair( true, event->waitForResponse() );
 }
 
 void TEventManager::removeEvent(int id)

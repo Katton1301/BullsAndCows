@@ -19,7 +19,8 @@ def test(test_dict):
         if 'result' not in pack:
             print(f'Error: result not found. Pack {pack_number}')
             return False
-        result = json.loads(send_message(pack['request']))
+        answer = send_message(pack['request'])
+        result = json.loads(answer)
         for key, value in pack['result'].items():
             if key not in result:
                 print(f'Error: no such {key} in results. Pack {pack_number}')
@@ -38,7 +39,8 @@ def test_process(path):
         print('Test ', test_file, end=' ')
         with open(os.path.join(path,test_file), 'r') as file:
             loaded_test = json.load(file)
-        success = success and test(loaded_test)
+        success_i = test(loaded_test)
+        success = success and success_i
     if success:
         print('Test completed successfully')
     else:
@@ -101,7 +103,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.t:
         print('Start testing a Bulls And Cows Server')
-        test_process('./tests/')
+        test_process('../tests/')
     elif args.b:
         print('Start self made tests')
         while True:

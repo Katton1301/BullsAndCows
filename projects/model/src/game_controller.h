@@ -8,7 +8,7 @@ class TGameController
 public:
     enum
     {
-        GAME_PROCESS_COUNT_LIMIT = 100
+        GAME_PROCESS_COUNT_LIMIT = 10
     };
     enum class TError : uint32_t
     {
@@ -54,6 +54,7 @@ public:
     TError switchGameBrain( uint32_t _processId, MODEL_COMPONENTS::TGameBrain _gameBrain );
     bool isStepInTransitionStage( ) const;
     uint32_t PlayerPlace( uint32_t _processId, bool _isPlayer ) const;
+    std::vector<uint8_t> SecretValue() const;
 
     std::vector<std::pair<uint32_t, bool>> const & WinnersId( ) const;
 
@@ -110,4 +111,5 @@ private:
     MODEL_COMPONENTS::TGameStage m_gameStage = MODEL_COMPONENTS::TGameStage::UNKNOWN;
     std::vector<std::pair<uint32_t, bool>> m_winnersId{};
     uint32_t m_game_step = 0;
+    std::vector<uint8_t> m_secretValue;
 };
