@@ -83,3 +83,6 @@ object_script.*
 *.exe
 *.out
 *.app
+
+*.env
+*.venv
