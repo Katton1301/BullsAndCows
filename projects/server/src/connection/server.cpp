@@ -1,18 +1,14 @@
 #include <connection/server.hpp>
+#include <components/commands.hpp>
 #include <iostream>
-
-std::string TServer::getEnvVar(const std::string& name, const std::string& defaultValue) {
-    const char* value = std::getenv(name.c_str());
-    return value ? value : defaultValue;
-}
 
 TServer::TServer(TEventManager& manager)
     : m_manager(manager)
     , m_is_running(false)
     , m_kafka_conf(RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL))
-    , m_kafka_brokers(getEnvVar("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"))
-    , m_kafka_topic(getEnvVar("KAFKA_TOPIC", "game_command"))
-    , m_kafka_group_id(getEnvVar("KAFKA_GROUP_ID", "server_group"))
+    , m_kafka_brokers(SERVER_COMPONENTS::getEnvVar("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"))
+    , m_kafka_topic(SERVER_COMPONENTS::getEnvVar("KAFKA_TOPIC_CONSUMER", "bot_game"))
+    , m_kafka_group_id(SERVER_COMPONENTS::getEnvVar("KAFKA_GROUP_ID", "server_group"))
 {
 }
 

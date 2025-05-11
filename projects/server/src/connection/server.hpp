@@ -5,7 +5,6 @@
 #include <vector>
 #include <atomic>
 #include <mutex>
-#include <cstdlib> // для getenv
 
 class TServer
 {
@@ -26,8 +25,6 @@ private:
     void startConsumers();
     void consumeMessages(int thread_id);
     void handleKafkaMessage(RdKafka::Message* message, int thread_id);
-
-    std::string getEnvVar(const std::string& name, const std::string& defaultValue = "");
 
     TEventManager& m_manager;
     std::vector<std::thread> m_consumer_threads;

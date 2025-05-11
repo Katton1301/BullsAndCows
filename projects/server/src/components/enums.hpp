@@ -77,6 +77,7 @@ namespace SERVER_COMPONENTS
     struct TResultData
     {
         uint32_t ServerId = 0;
+        std::string CorrelationId{};
         TResult Result = TResult::UNKNOWN;
         MODEL_COMPONENTS::TGameStage GameStage = MODEL_COMPONENTS::TGameStage::UNKNOWN;
         uint32_t GameId = 0;
@@ -93,6 +94,7 @@ namespace SERVER_COMPONENTS
     struct TRequestData
     {
         TCommand Command = TCommand::UNKNOWN;
+        std::string CorrelationId{};
         uint32_t ServerId = 0;
         uint32_t PlayerId = 0;
         uint32_t GameId = 0;

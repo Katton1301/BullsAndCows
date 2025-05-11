@@ -8,7 +8,7 @@ class TEventProcessor
 {
 public:
     TEventProcessor() = delete;
-    TEventProcessor(TEventManager& manager, RdKafka::Producer* kafka_producer);
+    TEventProcessor(TEventManager& manager, RdKafka::Producer* kafka_producer, std::string const & producer_topic);
 
     void start(int thread_count = 1);
     void stop();
@@ -26,6 +26,7 @@ private:
 
     TEventManager& m_manager;
     RdKafka::Producer* m_kafka_producer;
+    std::string m_producer_topic;
     std::vector<std::thread> m_workers;
     SERVER_COMPONENTS::TServerState m_serverState;
     uint32_t m_serverId = 0;

@@ -47,9 +47,10 @@ SERVER_COMPONENTS::TResult ConvertGameErrorToServerResult( TGameController::TErr
 }
 
 
-TEventProcessor::TEventProcessor(TEventManager& manager, RdKafka::Producer* kafka_producer)
+TEventProcessor::TEventProcessor(TEventManager& manager, RdKafka::Producer* kafka_producer, std::string const & producer_topic)
     : m_manager(manager)
     , m_kafka_producer(kafka_producer)
+    , m_producer_topic(producer_topic)
     , m_serverState(SERVER_COMPONENTS::TServerState::WAIT_REGISTRATION)
     , m_serverId(0)
     , m_running(false)
@@ -84,7 +85,7 @@ void TEventProcessor::processEvents()
         auto requestData = SERVER_COMPONENTS::ParseKafkaMessage(event->getData());
 
         SERVER_COMPONENTS::TResultData result;
-        if(requestData.Command == SERVER_COMPONENTS::TCommand::UNKNOWN)
+        if(requestData.CorrelationId == "" || requestData.Command == SERVER_COMPONENTS::TCommand::UNKNOWN)
         {
             result.Result = SERVER_COMPONENTS::TResult::ERROR_PARSE_MESSAGE;
         }
@@ -127,6 +128,7 @@ uint32_t TEventProcessor::ServerId() const
 SERVER_COMPONENTS::TResultData TEventProcessor::registerServer( SERVER_COMPONENTS::TRequestData const & request )
 {
     SERVER_COMPONENTS::TResultData result;
+    result.CorrelationId = request.CorrelationId;
     if(request.Command != SERVER_COMPONENTS::TCommand::REGISTER_SERVER)
     {
         result.Result = SERVER_COMPONENTS::TResult::ERROR_SERVER_NOT_REGISTRED;
@@ -149,6 +151,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleRequest( SERVER_COMPONENTS
     if(request.ServerId != ServerId())
     {
         SERVER_COMPONENTS::TResultData result;
+        result.CorrelationId = request.CorrelationId;
         result.ServerId = ServerId();
         result.Result = SERVER_COMPONENTS::TResult::ERROR_MESSAGE_FOR_ANOTHER_SERVER;
         return result;
@@ -170,6 +173,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleRequest( SERVER_COMPONENTS
 SERVER_COMPONENTS::TResultData TEventProcessor::handleServerCommand( SERVER_COMPONENTS::TRequestData const & request )
 {
     SERVER_COMPONENTS::TResultData result;
+    result.CorrelationId = request.CorrelationId;
     result.ServerId = ServerId();
     switch(request.Command)
     {
@@ -196,6 +200,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleServerCommand( SERVER_COMP
 SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPONENTS::TRequestData const & request )
 {
     SERVER_COMPONENTS::TResultData result;
+    result.CorrelationId = request.CorrelationId;
     result.ServerId = ServerId();
     auto success = TDataStorage::Instance().lockForProcessing(request.GameId, request.PlayerId);
     if (!success)
@@ -688,7 +693,7 @@ void TEventProcessor::sendToKafka(const std::string& message)
     }
 
     RdKafka::ErrorCode resp = m_kafka_producer->produce(
-        "response_topic",
+        m_producer_topic,
         RdKafka::Topic::PARTITION_UA,
         RdKafka::Producer::RK_MSG_COPY,
         const_cast<char*>(message.c_str()),

@@ -1,4 +1,5 @@
 #include <connection/server.hpp>
+#include <components/commands.hpp>
 #include <librdkafka/rdkafkacpp.h>
 #include <csignal>
 #include <atomic>
@@ -51,8 +52,9 @@ int main()
             return 1;
         }
         TEventManager manager;
-
-        TEventProcessor processor(manager, kafka_producer);
+        
+        std::string producer_topic = SERVER_COMPONENTS::getEnvVar("KAFKA_TOPIC_PRODUCER", "game_bot");
+        TEventProcessor processor(manager, kafka_producer, producer_topic);
         processor.start();
 
         TServer server(manager);

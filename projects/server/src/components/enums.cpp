@@ -240,6 +240,7 @@ namespace SERVER_COMPONENTS
     std::ostream& operator<<( std::ostream& stream_, TResultData const & result )
     {
         stream_ << "Server: " << result.ServerId << std::endl;
+        stream_ << "Correlation Id: " << result.CorrelationId << std::endl;
         stream_ << "Result: " << result.Result << std::endl;
         stream_ << "Game Stage: " << result.GameStage << std::endl;
         stream_ << "Game: " << result.GameId << std::endl;
@@ -268,6 +269,7 @@ namespace SERVER_COMPONENTS
     std::ostream& operator<<( std::ostream& stream_, TRequestData const & request )
     {
         stream_ << "Command: " << request.Command << std::endl;
+        stream_ << "Correlation Id: " << request.CorrelationId << std::endl;
         stream_ << "Player: " << request.PlayerId << std::endl;
         stream_ << "Game: " << request.GameId << std::endl;
         stream_ << "Computer: " << request.ComputerId << std::endl;
