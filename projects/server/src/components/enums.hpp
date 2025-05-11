@@ -80,13 +80,12 @@ namespace SERVER_COMPONENTS
         std::string CorrelationId{};
         TResult Result = TResult::UNKNOWN;
         MODEL_COMPONENTS::TGameStage GameStage = MODEL_COMPONENTS::TGameStage::UNKNOWN;
-        uint32_t GameId = 0;
+        std::vector< MODEL_COMPONENTS::StepResults > Steps;
         uint32_t PlayerId = 0;
-        uint32_t Bulls = 0;
-        uint32_t Cows = 0;
-        uint32_t Step = 0;
+        uint32_t GameId = 0;
         uint32_t Place = 0;
-        std::vector<uint8_t> GameValue{};
+        uint32_t Players = 0;
+        std::vector<uint8_t> SecretValue{};
         std::vector<uint32_t> GameIds{};
     };
 

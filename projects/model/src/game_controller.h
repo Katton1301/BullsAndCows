@@ -27,17 +27,6 @@ public:
         UNKNOWN_BRAIN,
     };
 
-    struct StepResults
-    {
-        uint32_t processId = 0;
-        bool player = true;
-        uint32_t step = 0;
-        std::vector< uint8_t> gameValueList{};
-        uint32_t bulls = 0;
-        uint32_t cows = 0;
-        bool finished = false;
-    };
-
     TGameController();
     ~TGameController();
 
@@ -58,9 +47,9 @@ public:
 
     std::vector<std::pair<uint32_t, bool>> const & WinnersId( ) const;
 
-    StepResults getProcessStepResults( uint32_t _processId, bool _isPlayer, uint32_t _gameStep ) const;
+    MODEL_COMPONENTS::StepResults getProcessStepResults( uint32_t _processId, bool _isPlayer, uint32_t _gameStep ) const;
 
-    std::vector<StepResults> getStepResults( uint32_t _gameStep ) const;
+    std::vector<MODEL_COMPONENTS::StepResults> getStepResults( uint32_t _gameStep ) const;
 
     uint32_t PlayersCount( ) const;
     MODEL_COMPONENTS::TGameStage GameStage() const;

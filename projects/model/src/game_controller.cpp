@@ -341,9 +341,9 @@ uint32_t TGameController::PlayerPlace( uint32_t _processId, bool _isPlayer ) con
     }
 }
 
-TGameController::StepResults TGameController::getProcessStepResults( uint32_t _processId, bool _isPlayer, uint32_t _gameStep ) const
+MODEL_COMPONENTS::StepResults TGameController::getProcessStepResults( uint32_t _processId, bool _isPlayer, uint32_t _gameStep ) const
 {
-    TGameController::StepResults result;
+    MODEL_COMPONENTS::StepResults result;
     result.player = _isPlayer;
     if(
         _gameStep > 0 && (
@@ -367,9 +367,9 @@ TGameController::StepResults TGameController::getProcessStepResults( uint32_t _p
     return result;
 }
 
-std::vector<TGameController::StepResults> TGameController::getStepResults( uint32_t _gameStep ) const
+std::vector<MODEL_COMPONENTS::StepResults> TGameController::getStepResults( uint32_t _gameStep ) const
 {
-    std::vector<StepResults> results;
+    std::vector<MODEL_COMPONENTS::StepResults> results;
     if(_gameStep == 0)
     {
         return results;

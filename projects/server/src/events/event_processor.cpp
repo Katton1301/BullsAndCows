@@ -346,7 +346,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
             {
                 if(!TStandartRules::Instance().isValidGameValue(request.GameValue))
                 {
-                    result.GameValue = request.GameValue;
+                    result.SecretValue = request.GameValue;
                     result.Result = SERVER_COMPONENTS::TResult::ERROR_INVALID_SECRET_VALUE;
                     break;
                 }
@@ -366,7 +366,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                     break;
                 }
             }
-            result.GameValue = game->SecretValue();
+            result.SecretValue = game->SecretValue();
             result.GameStage = game->GameStage();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }
@@ -406,10 +406,8 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 result.Result = ConvertGameErrorToServerResult(error);
                 break;
             }
-            auto stepResults = game->getProcessStepResults(request.PlayerId, true, currentStep + 1);
-            result.Cows = stepResults.cows;
-            result.Bulls = stepResults.bulls;
-            result.Step = stepResults.step;
+            result.Players = game->PlayersCount();
+            result.Steps = game->getStepResults(currentStep + 1);
             result.Place = game->PlayerPlace(request.PlayerId, true);
             result.GameStage = game->GameStage();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
@@ -440,10 +438,8 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 result.Result = ConvertGameErrorToServerResult(error);
                 break;
             }
-            auto stepResults = game->getProcessStepResults(request.ComputerId, false, currentStep + 1);
-            result.Cows = stepResults.cows;
-            result.Bulls = stepResults.bulls;
-            result.Step = stepResults.step;
+            result.Players = game->PlayersCount();
+            result.Steps = game->getStepResults(currentStep + 1);
             result.Place = game->PlayerPlace(request.ComputerId, false);
             result.GameStage = game->GameStage();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
@@ -533,11 +529,8 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 break;
             }
             auto stepResults = game->getProcessStepResults(id, isPlayer, request.Step);
-            result.Cows = stepResults.cows;
-            result.Bulls = stepResults.bulls;
-            result.Step = stepResults.step;
+            result.Steps.push_back(stepResults);
             result.Place = request.Step < game->GameStep(id, isPlayer) ? 0 : game->PlayerPlace(id, isPlayer);
-            result.GameValue = stepResults.gameValueList;
             result.GameStage = game->GameStage();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }
@@ -635,6 +628,8 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
             }
             auto & game = TDataStorage::Instance().getGame(request.GameId);
             game->FinishGame();
+            uint32_t lastStep = game->GameStep();
+            result.Steps = game->getStepResults(lastStep);
             result.GameStage = game->GameStage();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }

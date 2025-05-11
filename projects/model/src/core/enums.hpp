@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ctime>
 #include <cinttypes>
+#include <vector>
 
 namespace MODEL_COMPONENTS
 {
@@ -37,4 +38,15 @@ namespace MODEL_COMPONENTS
         END,
     };
     std::ostream& operator<<( std::ostream& stream_, TGameBrain _gameBrain );
+
+    struct StepResults
+    {
+        uint32_t processId = 0;
+        bool player = true;
+        uint32_t step = 0;
+        std::vector< uint8_t> gameValueList{};
+        uint32_t bulls = 0;
+        uint32_t cows = 0;
+        bool finished = false;
+    };
 }

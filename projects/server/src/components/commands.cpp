@@ -106,18 +106,32 @@ namespace SERVER_COMPONENTS
         {
             doc.AddMember("player_id", resultData.PlayerId, allocator);
         }
-        if(resultData.GameValue.size() > 0)
+        if(resultData.Players > 0)
         {
-            doc.AddMember("game_value", TStandartRules::Instance().gameValueToUint(resultData.GameValue), allocator);
+            doc.AddMember("players", resultData.Players, allocator);
         }
-
-        if(resultData.Step > 0)
+        if(resultData.SecretValue.size() > 0)
+        {
+            doc.AddMember("secret_value", TStandartRules::Instance().gameValueToUint(resultData.SecretValue), allocator);
+        }
+        if(resultData.Place > 0)
         {
             doc.AddMember("place", resultData.Place, allocator);
-            doc.AddMember("bulls", resultData.Bulls, allocator);
-            doc.AddMember("cows", resultData.Cows, allocator);
-            doc.AddMember("step", resultData.Step, allocator);
         }
+        rapidjson::Value steps_container(rapidjson::kArrayType);
+        for( auto const & step : resultData.Steps)
+        {
+            rapidjson::Value step_object(rapidjson::kObjectType);
+            step_object.AddMember("id", step.processId, allocator);
+            step_object.AddMember("player", rapidjson::Value().SetBool(step.player), allocator);
+            step_object.AddMember("step", step.step, allocator);
+            step_object.AddMember("bulls", step.bulls, allocator);
+            step_object.AddMember("cows", step.cows, allocator);
+            step_object.AddMember("game_value", TStandartRules::Instance().gameValueToUint(step.gameValueList), allocator);
+            step_object.AddMember("finished", rapidjson::Value().SetBool(step.finished), allocator);
+            steps_container.PushBack(step_object, allocator);
+        }
+        doc.AddMember("steps", steps_container, allocator);
         if(resultData.GameIds.size() > 0)
         {
             rapidjson::Value games_container(rapidjson::kArrayType);

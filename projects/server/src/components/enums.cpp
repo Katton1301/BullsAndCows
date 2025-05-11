@@ -245,24 +245,35 @@ namespace SERVER_COMPONENTS
         stream_ << "Game Stage: " << result.GameStage << std::endl;
         stream_ << "Game: " << result.GameId << std::endl;
         stream_ << "Player: " << result.PlayerId << std::endl;
-        stream_ << "Bulls: " << result.Bulls << std::endl;
-        stream_ << "Cows: " << result.Cows << std::endl;
-        stream_ << "Step: " << result.Step << std::endl;
+        for(auto const & step : result.Steps)
+        {
+            if(step.player)
+            {
+                stream_ << "Player ";
+            }
+            else
+            {
+                stream_ << "Computer ";
+            }
+            stream_ << "Id: " << step.processId << std::endl;
+            stream_ << "Bulls: " << step.bulls << std::endl;
+            stream_ << "Cows: " << step.cows << std::endl;
+            stream_ << "Step: " << step.step << std::endl;
+            stream_
+                << "Game Value: "
+                << step.gameValueList[0]
+                << step.gameValueList[1]
+                << step.gameValueList[2]
+                << step.gameValueList[3]
+                << std::endl;
+        }
         stream_ << "Place: " << result.Place << std::endl;
-        stream_
-            << "Game Value: "
-            << result.GameValue[0]
-            << result.GameValue[1]
-            << result.GameValue[2]
-            << result.GameValue[3]
-            << std::endl;
         stream_ << "Game Ids: ";
         for( auto id : result.GameIds)
         {
             stream_ << id << " ";
         }
         stream_ << std::endl;
-
         return stream_;
     }
 
