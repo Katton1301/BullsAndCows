@@ -7,8 +7,8 @@ TServer::TServer(TEventManager& manager)
     , m_is_running(false)
     , m_kafka_conf(RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL))
     , m_kafka_brokers(SERVER_COMPONENTS::getEnvVar("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"))
-    , m_kafka_topic(SERVER_COMPONENTS::getEnvVar("KAFKA_TOPIC_CONSUMER", "bot_game"))
-    , m_kafka_group_id(SERVER_COMPONENTS::getEnvVar("KAFKA_GROUP_ID", "server_group"))
+    , m_kafka_topic(SERVER_COMPONENTS::getEnvVar("KAFKA_TOPIC_FROM_BOT_TO_SERVER", "bot_game"))
+    , m_kafka_group_id(SERVER_COMPONENTS::getEnvVar("KAFKA_SERVER_GROUP_ID", "server_group"))
 {
 }
 

@@ -53,7 +53,7 @@ int main()
         }
         TEventManager manager;
         
-        std::string producer_topic = SERVER_COMPONENTS::getEnvVar("KAFKA_TOPIC_PRODUCER", "game_bot");
+        std::string producer_topic = SERVER_COMPONENTS::getEnvVar("KAFKA_TOPIC_FROM_SERVER_TO_BOT", "game_bot");
         TEventProcessor processor(manager, kafka_producer, producer_topic);
         processor.start();
 
