@@ -245,6 +245,8 @@ namespace SERVER_COMPONENTS
         stream_ << "Game Stage: " << result.GameStage << std::endl;
         stream_ << "Game: " << result.GameId << std::endl;
         stream_ << "Player: " << result.PlayerId << std::endl;
+        stream_ << "Players: " << result.Players << std::endl;
+        stream_ << "Unstepped Players: " << result.UnsteppedPlayers << std::endl;
         for(auto const & step : result.Steps)
         {
             if(step.player)

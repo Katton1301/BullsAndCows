@@ -52,6 +52,7 @@ public:
     std::vector<MODEL_COMPONENTS::StepResults> getStepResults( uint32_t _gameStep ) const;
 
     uint32_t PlayersCount( ) const;
+    uint32_t UnsteppedPlayers( ) const;
     MODEL_COMPONENTS::TGameStage GameStage() const;
     uint32_t GameStep() const;
     uint32_t GameStep(uint32_t _processId, bool _isPlayer) const;
@@ -88,7 +89,6 @@ private:
     std::function< uint32_t( uint32_t ) > const & RandomByModulus() const;
 
     void doComputersStep();
-    bool allPlayersCompleteCurrentStep();
     void defineWinners();
     void checkFinish();
 

@@ -85,6 +85,7 @@ namespace SERVER_COMPONENTS
         uint32_t GameId = 0;
         uint32_t Place = 0;
         uint32_t Players = 0;
+        uint32_t UnsteppedPlayers = 0;
         std::vector<uint8_t> SecretValue{};
         std::vector<uint32_t> GameIds{};
     };

@@ -24,6 +24,23 @@ uint32_t TGameController::PlayersCount( ) const
     return PlayerList().size() + ComputerList().size();
 }
 
+uint32_t TGameController::UnsteppedPlayers() const
+{
+    uint32_t unstepped_players = 0;
+    for(auto const & [gameId, playerProcess] : PlayerList())
+    {
+        if(
+            playerProcess->PlayerState() != MODEL_COMPONENTS::TPlayerState::FINISHED &&
+            playerProcess->PlayerState() != MODEL_COMPONENTS::TPlayerState::GAVE_UP &&
+            playerProcess->AttemptsCount() == GameStep()
+        )
+        {
+            ++unstepped_players;
+        }
+    }
+    return unstepped_players;
+}
+
 std::vector<uint8_t> TGameController::SecretValue() const
 {
     return m_secretValue;
@@ -95,30 +112,9 @@ TGameController::TError TGameController::StartGame( )
     return StartGame(secretValue.List());
 }
 
-bool TGameController::allPlayersCompleteCurrentStep()
-{
-    bool stepFinished = true;
-    if(std::any_of(
-            m_player_list.begin(),
-            m_player_list.end(),
-            [this]( auto const & pair )
-            {
-                return
-                    pair.second->PlayerState() != MODEL_COMPONENTS::TPlayerState::FINISHED &&
-                    pair.second->PlayerState() != MODEL_COMPONENTS::TPlayerState::GAVE_UP &&
-                    pair.second->AttemptsCount() == GameStep()
-                ;
-            }
-            ))
-    {
-        stepFinished = false;
-    }
-    return stepFinished;
-}
-
 TGameController::TError TGameController::FinishStep()
 {
-    if(!allPlayersCompleteCurrentStep())
+    if(UnsteppedPlayers() > 0)
     {
         return TError::NOT_ALL_PLAYERS_STEPED;
     }
@@ -197,7 +193,7 @@ TGameController::TError TGameController::DoPlayerStep( uint32_t _processId, std:
     }
     playerProcess->appendGameValue(TGameValue(_gameValueList));
 
-    if(allPlayersCompleteCurrentStep())
+    if(UnsteppedPlayers() == 0)
     {
         return FinishStep();
     }
@@ -219,7 +215,7 @@ TGameController::TError TGameController::PlayerGiveUp( uint32_t _processId )
     playerProcess->giveUp();
     if(stepInProgress)
     {
-        if(allPlayersCompleteCurrentStep())
+        if(UnsteppedPlayers() == 0)
         {
             return FinishStep();
         }

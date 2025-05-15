@@ -110,6 +110,10 @@ namespace SERVER_COMPONENTS
         {
             doc.AddMember("players", resultData.Players, allocator);
         }
+        if(resultData.UnsteppedPlayers > 0)
+        {
+            doc.AddMember("unstepped_players", resultData.UnsteppedPlayers, allocator);
+        }
         if(resultData.SecretValue.size() > 0)
         {
             doc.AddMember("secret_value", TStandartRules::Instance().gameValueToUint(resultData.SecretValue), allocator);

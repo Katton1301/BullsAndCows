@@ -421,6 +421,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 break;
             }
             result.Players = game->PlayersCount();
+            result.UnsteppedPlayers = game->UnsteppedPlayers();
             result.Steps = game->getStepResults(currentStep + 1);
             result.Place = game->PlayerPlace(request.PlayerId, true);
             result.GameStage = game->GameStage();
@@ -453,6 +454,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 break;
             }
             result.Players = game->PlayersCount();
+            result.UnsteppedPlayers = game->UnsteppedPlayers();
             result.Steps = game->getStepResults(currentStep + 1);
             result.Place = game->PlayerPlace(request.ComputerId, false);
             result.GameStage = game->GameStage();
@@ -544,6 +546,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
             }
             auto stepResults = game->getProcessStepResults(id, isPlayer, request.Step);
             result.Players = game->PlayersCount();
+            result.UnsteppedPlayers = game->UnsteppedPlayers();
             result.Steps.push_back(stepResults);
             result.Place = request.Step < game->GameStep(id, isPlayer) ? 0 : game->PlayerPlace(id, isPlayer);
             result.GameStage = game->GameStage();
