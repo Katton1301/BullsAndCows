@@ -41,7 +41,7 @@
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
             "player_id": 1,
-            "game_value": 4567
+            "secret_value": 4567
         }
     },
     {
@@ -59,10 +59,16 @@
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
             "player_id": 1,
-            "bulls": 0,
-            "cows": 0,
-            "step": 1,
-            "place": 0
+            "players": 1,
+            "steps": [{
+                "id": 1,
+                "player": true,
+                "game_value": 123,
+                "bulls": 0,
+                "cows": 0,
+                "step": 1,
+                "finished": false
+            }]
         }
     },
     {
@@ -80,10 +86,16 @@
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
             "player_id": 1,
-            "bulls": 0,
-            "cows": 2,
-            "step": 2,
-            "place": 0
+            "players": 1,
+            "steps": [{
+                "id": 1,
+                "player": true,
+                "game_value": 2345,
+                "bulls": 0,
+                "cows": 2,
+                "step": 2,
+                "finished": false
+            }]
         }
     },
     {
@@ -101,10 +113,17 @@
             "game_stage": "FINISHED",
             "game_id": 1,
             "player_id": 1,
-            "bulls": 4,
-            "cows": 0,
-            "step": 3,
-            "place": 1
+            "place": 1,
+            "players": 1,
+            "steps": [{
+                "id": 1,
+                "player": true,
+                "game_value": 4567,
+                "bulls": 4,
+                "cows": 0,
+                "step": 3,
+                "finished": true
+            }]
         }
     },
     {

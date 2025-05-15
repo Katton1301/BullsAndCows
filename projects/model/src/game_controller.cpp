@@ -361,7 +361,7 @@ MODEL_COMPONENTS::StepResults TGameController::getProcessStepResults( uint32_t _
             result.bulls = lastHistoryData.second.first;
             result.cows = lastHistoryData.second.second;
             result.step = _gameStep;
-            result.finished = process->AttemptsCount() == _gameStep;
+            result.finished = process->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED;
         }
     }
     return result;

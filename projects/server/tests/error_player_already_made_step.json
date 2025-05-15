@@ -57,7 +57,7 @@
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
             "player_id": 1,
-            "game_value": 1234
+            "secret_value": 1234
         }
     },
     {
@@ -75,10 +75,16 @@
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
             "player_id": 1,
-            "place": 0,
-            "bulls": 3,
-            "cows": 0,
-            "step": 1
+            "players": 2,
+            "steps": [{
+                "id": 1,
+                "player": true,
+                "game_value": 1235,
+                "bulls": 3,
+                "cows": 0,
+                "step": 1,
+                "finished": false
+            }]
         }
     },
     {

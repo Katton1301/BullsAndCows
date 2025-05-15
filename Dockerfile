@@ -24,6 +24,7 @@ COPY . .
 RUN cd projects && mkdir -p build && cd build && \
     cmake \
     -DBUILD_SERVER=ON \
+    -DBUILD_TCP_SERVER=OFF \
     -DBUILD_SIMULATION=OFF \
     -DBUILD_TESTS=OFF \
     -DBUILD_GAMEVIEW=OFF \

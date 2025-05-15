@@ -1,6 +1,8 @@
 #include <connection/server.hpp>
 #include <components/commands.hpp>
+#if defined(KAFKA_SERVER)
 #include <librdkafka/rdkafkacpp.h>
+#endif
 #include <csignal>
 #include <atomic>
 
@@ -11,6 +13,7 @@ void signal_handler([[maybe_unused]]int signal)
     running = false;
 }
 
+#if defined(KAFKA_SERVER)
 RdKafka::Producer* CreateKafkaProducer() 
 {
     std::string errstr;
@@ -37,6 +40,7 @@ RdKafka::Producer* CreateKafkaProducer()
     delete conf;
     return producer;
 }
+#endif
 
 int main() 
 {
@@ -45,16 +49,21 @@ int main()
 
     try 
     {
+        TEventManager manager;
+
+#if defined(KAFKA_SERVER)
         RdKafka::Producer* kafka_producer = CreateKafkaProducer();
         if (!kafka_producer) 
         {
             std::cerr << "Failed to initialize Kafka producer" << std::endl;
             return 1;
         }
-        TEventManager manager;
         
         std::string producer_topic = SERVER_COMPONENTS::getEnvVar("KAFKA_TOPIC_FROM_SERVER_TO_BOT", "game_bot");
         TEventProcessor processor(manager, kafka_producer, producer_topic);
+#else
+        TEventProcessor processor(manager);
+#endif
         processor.start();
 
         TServer server(manager);
@@ -66,17 +75,19 @@ int main()
         {
             std::this_thread::sleep_for(std::chrono::seconds(1));
 
+#if defined(KAFKA_SERVER)
             if (kafka_producer->outq_len() > 0) 
             {
                 kafka_producer->poll(0);
             }
+#endif
         }
 
-        // Грациозное завершение
         std::cout << "Shutting down server..." << std::endl;
         processor.stop();
         server.stop();
 
+#if defined(KAFKA_SERVER)
         while (kafka_producer->outq_len() > 0) 
         {
             std::cout << "Waiting for " << kafka_producer->outq_len()
@@ -85,6 +96,7 @@ int main()
         }
 
         delete kafka_producer;
+#endif
         std::cout << "Server stopped successfully" << std::endl;
     }
     catch (std::exception const & e) 

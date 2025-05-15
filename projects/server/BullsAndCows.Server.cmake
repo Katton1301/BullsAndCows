@@ -19,41 +19,52 @@ file(
 
 message(STATUS "[server] target name: ${SERVER_TARGET_NAME}")
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(RDKAFKA REQUIRED rdkafka)
+if(BUILD_TCP_SERVER)
+    find_package(Boost REQUIRED)
+else()
+    add_definitions(-DKAFKA_SERVER)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(RDKAFKA REQUIRED rdkafka)
 
-if(NOT RDKAFKA_FOUND)
-    message(WARNING "Falling back to manual paths for librdkafka")
-    set(RDKAFKA_LIBRARY_DIRS "/usr/lib/x86_64-linux-gnu")
-    set(RDKAFKA_LIBRARIES rdkafka)
+    if(NOT RDKAFKA_FOUND)
+        message(WARNING "Falling back to manual paths for librdkafka")
+        set(RDKAFKA_LIBRARY_DIRS "/usr/lib/x86_64-linux-gnu")
+        set(RDKAFKA_LIBRARIES rdkafka)
+    endif()
+
+    if(NOT RDKAFKA_INCLUDE_DIRS)
+        set(RDKAFKA_INCLUDE_DIRS "/usr/include/librdkafka")
+    endif()
+
+    message(STATUS "RDKAFKA LIBRARIES: ${RDKAFKA_LIBRARIES}")
+    message(STATUS "RDKAFKA LIBRARIES DIRS: ${RDKAFKA_LIBRARY_DIRS}")
+    message(STATUS "RDKAFKA INCLUDE DIRS: ${RDKAFKA_INCLUDE_DIRS}")
 endif()
 
-if(NOT RDKAFKA_INCLUDE_DIRS)
-    set(RDKAFKA_INCLUDE_DIRS "/usr/include/librdkafka")
-endif()
 
-
-message(STATUS "RDKAFKA LIBRARIES: ${RDKAFKA_LIBRARIES}")
-message(STATUS "RDKAFKA LIBRARIES DIRS: ${RDKAFKA_LIBRARY_DIRS}")
-message(STATUS "RDKAFKA INCLUDE DIRS: ${RDKAFKA_INCLUDE_DIRS}")
 
 if(WIN32)
     add_link_options(-Wl,-subsystem=windows)
 endif()
 
 add_executable( ${SERVER_TARGET_NAME} ${sources} )
-target_include_directories(${SERVER_TARGET_NAME} PRIVATE ${RDKAFKA_INCLUDE_DIRS})
-
 set(server_libraries "")
 set(server_libraries ${server_libraries} "${MODEL_TARGET_NAME}")
 message(STATUS "[server] project dependencies: ${server_libraries}")
+if(NOT BUILD_TCP_SERVER)
+    target_include_directories(${SERVER_TARGET_NAME} PRIVATE ${RDKAFKA_INCLUDE_DIRS})
+    target_link_directories(${SERVER_TARGET_NAME} PRIVATE
+        ${RDKAFKA_LIBRARY_DIRS}
+    )
+endif()
 
-target_link_directories(${SERVER_TARGET_NAME} PRIVATE
-    ${RDKAFKA_LIBRARY_DIRS}
-)
 
 target_link_libraries(${SERVER_TARGET_NAME} ${server_libraries})
-target_link_libraries(${SERVER_TARGET_NAME} rdkafka rdkafka++ pthread ssl crypto sasl2 z dl)
+if(BUILD_TCP_SERVER)
+    target_link_libraries(${SERVER_TARGET_NAME} Boost::boost)
+else()
+    target_link_libraries(${SERVER_TARGET_NAME} rdkafka rdkafka++ pthread ssl crypto sasl2 z dl)
+endif()
 
 if(WIN32)
     target_link_libraries(${SERVER_TARGET_NAME} ws2_32 mswsock)

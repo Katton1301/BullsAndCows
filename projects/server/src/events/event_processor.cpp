@@ -47,10 +47,19 @@ SERVER_COMPONENTS::TResult ConvertGameErrorToServerResult( TGameController::TErr
 }
 
 
-TEventProcessor::TEventProcessor(TEventManager& manager, RdKafka::Producer* kafka_producer, std::string const & producer_topic)
+TEventProcessor::TEventProcessor(
+        TEventManager& manager
+#if defined(KAFKA_SERVER)
+        , RdKafka::Producer* kafka_producer
+        , std::string const & producer_topic
+#endif
+    )
     : m_manager(manager)
+#if defined(KAFKA_SERVER)
     , m_kafka_producer(kafka_producer)
     , m_producer_topic(producer_topic)
+#endif
+    , m_workers()
     , m_serverState(SERVER_COMPONENTS::TServerState::WAIT_REGISTRATION)
     , m_serverId(0)
     , m_running(false)
@@ -85,6 +94,7 @@ void TEventProcessor::processEvents()
         auto requestData = SERVER_COMPONENTS::ParseKafkaMessage(event->getData());
 
         SERVER_COMPONENTS::TResultData result;
+        result.CorrelationId = requestData.CorrelationId;
         if(requestData.CorrelationId == "" || requestData.Command == SERVER_COMPONENTS::TCommand::UNKNOWN)
         {
             result.Result = SERVER_COMPONENTS::TResult::ERROR_PARSE_MESSAGE;
@@ -107,7 +117,11 @@ void TEventProcessor::processEvents()
         if(result.Result != SERVER_COMPONENTS::TResult::UNKNOWN)
         {
             auto resultMessage = SERVER_COMPONENTS::SerializeResultToKafkaMessage(result);
+#if defined(KAFKA_SERVER)
             sendToKafka(resultMessage);
+#else
+            std::cout << "Sent to Kafka: " << resultMessage << std::endl;
+#endif
             m_manager.setEventResponse(event->getId(), resultMessage);
             //m_manager.removeEvent(event->getId());
         }
@@ -529,6 +543,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 break;
             }
             auto stepResults = game->getProcessStepResults(id, isPlayer, request.Step);
+            result.Players = game->PlayersCount();
             result.Steps.push_back(stepResults);
             result.Place = request.Step < game->GameStep(id, isPlayer) ? 0 : game->PlayerPlace(id, isPlayer);
             result.GameStage = game->GameStage();
@@ -679,6 +694,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
     return result;
 }
 
+#if defined(KAFKA_SERVER)
 void TEventProcessor::sendToKafka(const std::string& message)
 {
     if (!m_kafka_producer) 
@@ -710,3 +726,4 @@ void TEventProcessor::sendToKafka(const std::string& message)
 
     m_kafka_producer->poll(0);
 }
+#endif

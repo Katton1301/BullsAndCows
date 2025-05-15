@@ -59,7 +59,7 @@
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
             "player_id": 1,
-            "game_value": 123
+            "secret_value": 123
         }
     },
     {

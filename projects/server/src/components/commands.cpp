@@ -18,7 +18,7 @@ namespace SERVER_COMPONENTS
             return request;
         }
 
-        const char* requiredFields[] = {"server_id", "command"};
+        const char* requiredFields[] = {"server_id", "command", "correlation_id"};
         for (const char* field : requiredFields)
         {
             if (!doc.HasMember(field))

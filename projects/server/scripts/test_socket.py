@@ -2,6 +2,7 @@ import socket
 import os
 import json
 import argparse
+import uuid
 
 def send_message(json_message) -> dict:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -19,9 +20,13 @@ def test(test_dict):
         if 'result' not in pack:
             print(f'Error: result not found. Pack {pack_number}')
             return False
-        answer = send_message(pack['request'])
+        request = pack['request']
+        test_result = pack['result']
+        request['correlation_id'] = str(uuid.uuid4())
+        test_result['correlation_id'] = request['correlation_id']
+        answer = send_message(request)
         result = json.loads(answer)
-        for key, value in pack['result'].items():
+        for key, value in test_result.items():
             if key not in result:
                 print(f'Error: no such {key} in results. Pack {pack_number}')
                 return False
@@ -49,6 +54,7 @@ def test_process(path):
 def create_message() -> dict:
     print('Creating message...')
     msg_dict = dict()
+    msg_dict['correlation_id'] = str(uuid.uuid4())
     msg_dict['server_id'] = int(input('(Required)Write server Id: '))
     msg_dict['command'] = int(input('(Required)Write command Id: '))
     print('The Folowing parameters are optional. To finish message type 'f'. To skip parameter just press Enter.')
