@@ -24,7 +24,7 @@ uint32_t TGameController::PlayersCount( ) const
     return PlayerList().size() + ComputerList().size();
 }
 
-uint32_t TGameController::UnsteppedPlayers() const
+uint32_t TGameController::UnsteppedPlayers( uint32_t _gameStep ) const
 {
     uint32_t unstepped_players = 0;
     for(auto const & [gameId, playerProcess] : PlayerList())
@@ -32,13 +32,18 @@ uint32_t TGameController::UnsteppedPlayers() const
         if(
             playerProcess->PlayerState() != MODEL_COMPONENTS::TPlayerState::FINISHED &&
             playerProcess->PlayerState() != MODEL_COMPONENTS::TPlayerState::GAVE_UP &&
-            playerProcess->AttemptsCount() == GameStep()
+            playerProcess->AttemptsCount() == _gameStep
         )
         {
             ++unstepped_players;
         }
     }
     return unstepped_players;
+}
+
+uint32_t TGameController::UnsteppedPlayers() const
+{
+    return UnsteppedPlayers(GameStep());
 }
 
 std::vector<uint8_t> TGameController::SecretValue() const
@@ -405,6 +410,85 @@ std::vector<MODEL_COMPONENTS::StepResults> TGameController::getStepResults( uint
                 }
                 );
         }
+    }
+    return results;
+}
+
+std::vector<MODEL_COMPONENTS::GameResults> TGameController::getGameResults() const
+{
+    std::vector<MODEL_COMPONENTS::GameResults> results;
+
+    // Only return results if the game is finished
+    if (GameStage() != MODEL_COMPONENTS::TGameStage::FINISHED)
+    {
+        return results;
+    }
+
+    for (const auto& [id, process] : PlayerList())
+    {
+        results.push_back({
+            id,
+            true,
+            process->AttemptsCount(),
+            process->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP,
+            0
+        });
+    }
+
+    for (const auto& [id, process] : ComputerList())
+    {
+        results.push_back({
+            id,
+            false,
+            process->AttemptsCount(),
+            process->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP,
+            0
+        });
+    }
+
+    // Sort results:
+    // 1. Players who didn't give up come first (sorted by steps ascending)
+    // 2. Players who gave up come next (sorted by steps descending)
+    std::sort(results.begin(), results.end(), [](const auto& a, const auto& b)
+    {
+        if (a.give_up != b.give_up)
+        {
+            return !a.give_up;
+        }
+        if (!a.give_up)
+        {
+            return a.step < b.step;
+        } else
+        {
+            return a.step > b.step;
+        }
+    });
+
+    uint32_t currentPlace = 1;
+    for (size_t i = 0; i < results.size(); ++i)
+    {
+        if (
+            i > 0 &&
+            !results[i].give_up &&
+            !results[i-1].give_up &&
+            results[i].step == results[i-1].step
+        )
+        {
+            results[i].place = results[i-1].place;
+        }
+        else if (
+            i > 0 &&
+            results[i].give_up &&
+            results[i-1].give_up &&
+            results[i].step == results[i-1].step)
+        {
+            results[i].place = results[i-1].place;
+        }
+        else
+        {
+            results[i].place = currentPlace;
+        }
+        currentPlace = results[i].place + 1;
     }
     return results;
 }

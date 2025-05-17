@@ -95,6 +95,9 @@ namespace SERVER_COMPONENTS
             stream_ << "TCommand::FINISH_GAME";
             break;
 
+        case TCommand::GAME_RESULT  :
+            stream_ << "TCommand::GAME_RESULT";
+            break;
         case TCommand::REMOVE_GAME  :
             stream_ << "TCommand::REMOVE_GAME";
             break;
@@ -269,7 +272,6 @@ namespace SERVER_COMPONENTS
                 << step.gameValueList[3]
                 << std::endl;
         }
-        stream_ << "Place: " << result.Place << std::endl;
         stream_ << "Game Ids: ";
         for( auto id : result.GameIds)
         {

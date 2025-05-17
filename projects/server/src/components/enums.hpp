@@ -36,6 +36,7 @@ namespace SERVER_COMPONENTS
         GIVE_RIGHTS,
         LEAVE_FROM_GAME,
         FINISH_GAME,
+        GAME_RESULT,
         REMOVE_GAME,
     };
     std::ostream& operator<<( std::ostream& stream_, TCommand id );
@@ -81,9 +82,9 @@ namespace SERVER_COMPONENTS
         TResult Result = TResult::UNKNOWN;
         MODEL_COMPONENTS::TGameStage GameStage = MODEL_COMPONENTS::TGameStage::UNKNOWN;
         std::vector< MODEL_COMPONENTS::StepResults > Steps;
+        std::vector< MODEL_COMPONENTS::GameResults > GameResults;
         uint32_t PlayerId = 0;
         uint32_t GameId = 0;
-        uint32_t Place = 0;
         uint32_t Players = 0;
         uint32_t UnsteppedPlayers = 0;
         std::vector<uint8_t> SecretValue{};

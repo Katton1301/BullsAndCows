@@ -421,9 +421,8 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 break;
             }
             result.Players = game->PlayersCount();
-            result.UnsteppedPlayers = game->UnsteppedPlayers();
+            result.UnsteppedPlayers = game->UnsteppedPlayers(currentStep);
             result.Steps = game->getStepResults(currentStep + 1);
-            result.Place = game->PlayerPlace(request.PlayerId, true);
             result.GameStage = game->GameStage();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }
@@ -454,9 +453,8 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 break;
             }
             result.Players = game->PlayersCount();
-            result.UnsteppedPlayers = game->UnsteppedPlayers();
+            result.UnsteppedPlayers = game->UnsteppedPlayers(currentStep);
             result.Steps = game->getStepResults(currentStep + 1);
-            result.Place = game->PlayerPlace(request.ComputerId, false);
             result.GameStage = game->GameStage();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }
@@ -546,9 +544,8 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
             }
             auto stepResults = game->getProcessStepResults(id, isPlayer, request.Step);
             result.Players = game->PlayersCount();
-            result.UnsteppedPlayers = game->UnsteppedPlayers();
+            result.UnsteppedPlayers = game->UnsteppedPlayers(request.Step - 1);
             result.Steps.push_back(stepResults);
-            result.Place = request.Step < game->GameStep(id, isPlayer) ? 0 : game->PlayerPlace(id, isPlayer);
             result.GameStage = game->GameStage();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }
@@ -649,6 +646,28 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
             uint32_t lastStep = game->GameStep();
             result.Steps = game->getStepResults(lastStep);
             result.GameStage = game->GameStage();
+            result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
+        }
+        break;
+        case SERVER_COMPONENTS::TCommand::GAME_RESULT:
+        {
+            if(!TDataStorage::Instance().isPlayerExists(request.PlayerId))
+            {
+                result.Result = SERVER_COMPONENTS::TResult::ERROR_PLAYER_NOT_FOUND;
+                break;
+            }
+            if(!TDataStorage::Instance().isGameExists(request.GameId))
+            {
+                result.Result = SERVER_COMPONENTS::TResult::ERROR_GAME_NOT_EXISTS;
+                break;
+            }
+            auto & game = TDataStorage::Instance().getGame(request.GameId);
+            if(game->GameStage() != MODEL_COMPONENTS::TGameStage::FINISHED)
+            {
+                result.Result = SERVER_COMPONENTS::TResult::ERROR_GAME_IN_PROGRESS;
+                break;
+            }
+            result.GameResults = game->getGameResults();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }
         break;

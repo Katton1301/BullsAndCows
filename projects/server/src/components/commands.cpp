@@ -118,24 +118,38 @@ namespace SERVER_COMPONENTS
         {
             doc.AddMember("secret_value", TStandartRules::Instance().gameValueToUint(resultData.SecretValue), allocator);
         }
-        if(resultData.Place > 0)
+        if(resultData.Steps.size() > 0)
         {
-            doc.AddMember("place", resultData.Place, allocator);
+            rapidjson::Value steps_container(rapidjson::kArrayType);
+            for( auto const & step : resultData.Steps)
+            {
+                rapidjson::Value step_object(rapidjson::kObjectType);
+                step_object.AddMember("id", step.processId, allocator);
+                step_object.AddMember("player", rapidjson::Value().SetBool(step.player), allocator);
+                step_object.AddMember("step", step.step, allocator);
+                step_object.AddMember("bulls", step.bulls, allocator);
+                step_object.AddMember("cows", step.cows, allocator);
+                step_object.AddMember("game_value", TStandartRules::Instance().gameValueToUint(step.gameValueList), allocator);
+                step_object.AddMember("finished", rapidjson::Value().SetBool(step.finished), allocator);
+                steps_container.PushBack(step_object, allocator);
+            }
+            doc.AddMember("steps", steps_container, allocator);
         }
-        rapidjson::Value steps_container(rapidjson::kArrayType);
-        for( auto const & step : resultData.Steps)
+        if(resultData.GameResults.size() > 0)
         {
-            rapidjson::Value step_object(rapidjson::kObjectType);
-            step_object.AddMember("id", step.processId, allocator);
-            step_object.AddMember("player", rapidjson::Value().SetBool(step.player), allocator);
-            step_object.AddMember("step", step.step, allocator);
-            step_object.AddMember("bulls", step.bulls, allocator);
-            step_object.AddMember("cows", step.cows, allocator);
-            step_object.AddMember("game_value", TStandartRules::Instance().gameValueToUint(step.gameValueList), allocator);
-            step_object.AddMember("finished", rapidjson::Value().SetBool(step.finished), allocator);
-            steps_container.PushBack(step_object, allocator);
+            rapidjson::Value results_container(rapidjson::kArrayType);
+            for( auto const & step : resultData.GameResults)
+            {
+                rapidjson::Value result_object(rapidjson::kObjectType);
+                result_object.AddMember("id", step.processId, allocator);
+                result_object.AddMember("player", rapidjson::Value().SetBool(step.player), allocator);
+                result_object.AddMember("step", step.step, allocator);
+                result_object.AddMember("place", step.place, allocator);
+                result_object.AddMember("give_up", rapidjson::Value().SetBool(step.give_up), allocator);
+                results_container.PushBack(result_object, allocator);
+            }
+            doc.AddMember("game_results", results_container, allocator);
         }
-        doc.AddMember("steps", steps_container, allocator);
         if(resultData.GameIds.size() > 0)
         {
             rapidjson::Value games_container(rapidjson::kArrayType);

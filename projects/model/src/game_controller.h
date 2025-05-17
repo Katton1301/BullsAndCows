@@ -50,8 +50,10 @@ public:
     MODEL_COMPONENTS::StepResults getProcessStepResults( uint32_t _processId, bool _isPlayer, uint32_t _gameStep ) const;
 
     std::vector<MODEL_COMPONENTS::StepResults> getStepResults( uint32_t _gameStep ) const;
+    std::vector<MODEL_COMPONENTS::GameResults> getGameResults( ) const;
 
     uint32_t PlayersCount( ) const;
+    uint32_t UnsteppedPlayers( uint32_t _gameStep ) const;
     uint32_t UnsteppedPlayers( ) const;
     MODEL_COMPONENTS::TGameStage GameStage() const;
     uint32_t GameStep() const;

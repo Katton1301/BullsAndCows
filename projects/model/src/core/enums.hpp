@@ -49,4 +49,13 @@ namespace MODEL_COMPONENTS
         uint32_t cows = 0;
         bool finished = false;
     };
+
+    struct GameResults
+    {
+        uint32_t processId = 0;
+        bool player = true;
+        uint32_t step = 0;
+        bool give_up = false;
+        uint32_t place = 0;
+    };
 }
