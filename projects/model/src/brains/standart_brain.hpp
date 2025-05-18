@@ -31,8 +31,10 @@ public:
 
     virtual void Init() override;
     virtual void makePredict( ) override;
+    virtual void restoreFromHistory() override;
 
 protected:
+    void initDigitCoins();
     void flipValueCoins(std::vector<uint8_t> & value, bool isFrontSide);
 
 protected:
@@ -64,6 +66,7 @@ public:
     ~TStandartRandomBrain() = default;
 
     virtual void makePredict( ) override;
+    virtual void restoreFromHistory() override;
 };
 
 class TStandartStupidBrain : public TAnaliticBrain
@@ -75,6 +78,7 @@ public:
 
     virtual void Init( ) override;
     virtual void makePredict( ) override;
+    virtual void restoreFromHistory() override;
 protected:
     virtual void handleValuesByHistory();
     virtual int32_t chooseBestGameValueOffset();
@@ -98,6 +102,7 @@ public:
 
     virtual void Init( ) override;
     virtual void makePredict( ) override;
+    virtual void restoreFromHistory() override;
 protected:
     virtual void handleValuesByHistory() override;
     virtual int32_t chooseBestGameValueOffset() override;

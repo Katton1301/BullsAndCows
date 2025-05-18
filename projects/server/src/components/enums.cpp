@@ -101,6 +101,9 @@ namespace SERVER_COMPONENTS
         case TCommand::REMOVE_GAME  :
             stream_ << "TCommand::REMOVE_GAME";
             break;
+        case TCommand::RESTORE_GAME  :
+            stream_ << "TCommand::RESTORE_GAME";
+            break;
 
         default :
             std::cout << "< Wrong command identifier : " << static_cast< int >( id ) << " >";

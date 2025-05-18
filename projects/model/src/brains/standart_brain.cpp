@@ -33,7 +33,11 @@ static std::shared_ptr<TValueNode > MainNode()
 TDecisionTreeBrain::TDecisionTreeBrain( TStandartPlayerProcess const * _playerProcess )
     : TStandartBrain(_playerProcess)
 {
+    initDigitCoins();
+}
 
+void TDecisionTreeBrain::initDigitCoins()
+{
     m_digitCoins.clear();
     for(uint8_t digit = 0; digit < TStandartRules::Instance().NumbersCount(); ++digit)
     {
@@ -63,6 +67,67 @@ void TDecisionTreeBrain::makePredict()
     predectedValue = m_gameNode->Value();
     flipValueCoins(predectedValue,false);
     m_predictedValue = std::make_shared<TGameValue<uint8_t>>(predectedValue);
+}
+
+void TDecisionTreeBrain::restoreFromHistory()
+{
+    auto const & history = m_playerProcess_cptr->HistoryList();
+    Init();
+
+    m_digitCoins.clear();
+    for(uint8_t digit = 0; digit < TStandartRules::Instance().NumbersCount(); ++digit)
+    {
+        m_digitCoins.push_back(std::make_pair(digit,TStandartRules::Instance().NumbersCount()));
+    }
+
+    for (auto const & [value, bc] : history)
+    {
+        for(uint32_t i = 0; i < value.List().size(); ++i)
+        {
+            auto digit = m_gameNode->Value()[i];
+            auto it = std::find_if(m_digitCoins.begin(), m_digitCoins.end(), [digit](auto const & pair){return pair.first == digit;});
+            assert(it == m_digitCoins.end());
+            it->second = value.List()[i];
+        }
+        if (m_gameNode->ContainBullsNCows(bc.first, bc.second))
+        {
+            m_gameNode = m_gameNode->ChildsAt(bc.first, bc.second);
+        }
+        else
+        {
+            Init();
+            break;
+        }
+    }
+
+    std::set<uint8_t> usedDigits;
+    for(auto const & [front, back] : m_digitCoins)
+    {
+        if(back != TStandartRules::Instance().NumbersCount())
+        {
+            usedDigits.emplace(back);
+        }
+    }
+    std::vector<uint8_t> unusedDigits;
+    for(uint8_t digit = 0; digit < TStandartRules::Instance().NumbersCount(); ++digit)
+    {
+        if(!usedDigits.contains(digit))
+        {
+            unusedDigits.push_back(digit);
+        }
+    }
+    for(auto & [front, back] : m_digitCoins)
+    {
+        if(back == 10)
+        {
+            uint32_t offsetDigit = m_playerProcess_cptr->GetRandom()(unusedDigits.size());
+            std::swap(unusedDigits[offsetDigit], unusedDigits.back());
+            back = unusedDigits.back();
+            unusedDigits.pop_back();
+        }
+    }
+    assert(unusedDigits.empty());
+
 }
 
 void TDecisionTreeBrain::flipValueCoins(std::vector<uint8_t> & value, bool isFrontSide )
@@ -129,6 +194,19 @@ void TStandartRandomBrain::makePredict( )
     m_possibleValues.erase( m_possibleValues.begin() + rnd_offset );
 }
 
+void TStandartRandomBrain::restoreFromHistory()
+{
+    Init();
+    auto const & history = m_playerProcess_cptr->HistoryList();
+    for(auto const & [value, bc] : history)
+    {
+        auto const & list = value.List();
+        std::erase_if(m_possibleValues,
+                    [list](auto const & possibleValue){return possibleValue.List() == list;}
+        );
+    }
+}
+
 TStandartStupidBrain::TStandartStupidBrain( TStandartPlayerProcess const * _playerProcess )
     : TAnaliticBrain(_playerProcess)
 {
@@ -165,6 +243,23 @@ void TStandartStupidBrain::makePredict( )
     assert(chosen_value_offset >= 0);
     m_predictedValue = std::make_shared<TGameValue<uint8_t>>(m_possibleValues[chosen_value_offset]);
     m_possibleValues.erase( m_possibleValues.begin() + chosen_value_offset );
+}
+
+void TStandartStupidBrain::restoreFromHistory()
+{
+    auto const & history = m_playerProcess_cptr->HistoryList();
+    Init();
+    for (const auto& [value, bc] : history)
+    {
+        if (bc.first + bc.second == 0)
+        {
+            eraseValuesForDigits(value.List());
+        } else if (bc.first + bc.second == TStandartRules::Instance().ValueSize())
+        {
+            leaveValuesForDigits(value.List());
+        }
+        calcPriority();
+    }
 }
 
 void TStandartStupidBrain::handleValuesByHistory( )
@@ -368,6 +463,12 @@ void TStandartSmartBrain::makePredict()
     m_possibleValues.erase( m_possibleValues.begin() + chosen_value_offset );
 }
 
+void TStandartSmartBrain::restoreFromHistory()
+{
+    Init();
+    handleValuesByHistory();
+}
+
 int32_t TStandartSmartBrain::chooseBestGameValueOffset()
 {
     static std::vector<std::vector<uint32_t>> digitsCountInValues(
@@ -430,7 +531,7 @@ int32_t TStandartSmartBrain::chooseBestGameValueOffset()
         }
         if(
             availableIndexList.size() == 0 ||
-            !std::any_of(chosenGameValue.begin(), chosenGameValue.end(), [this](auto d){return d == TStandartRules::Instance().NumbersCount();})
+            !std::any_of(chosenGameValue.begin(), chosenGameValue.end(), [](auto d){return d == TStandartRules::Instance().NumbersCount();})
         )
         {
             break;

@@ -702,6 +702,53 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }
         break;
+        case SERVER_COMPONENTS::TCommand::RESTORE_GAME:
+        {
+            if(TDataStorage::Instance().isGameExists(request.GameId))
+            {
+                result.Result = SERVER_COMPONENTS::TResult::ERROR_GAME_ALREADY_EXISTS;
+                break;
+            }
+            TDataStorage::Instance().createGame(request.GameId);
+            auto & game = TDataStorage::Instance().getGame(request.GameId);
+            if(request.GameValue.size() == 0|| !TStandartRules::Instance().isValidGameValue(request.GameValue))
+            {
+                TDataStorage::Instance().removeGame(request.GameId);
+                result.Result = SERVER_COMPONENTS::TResult::ERROR_INVALID_GAME_VALUE;
+                break;
+            }
+            auto secret_value = request.GameValue;
+            std::unordered_map<
+                    uint32_t,
+                    std::tuple<bool, MODEL_COMPONENTS::TGameBrain, TStandartPlayerProcess::THistoryList>
+                >  restoreData;
+
+            for( auto const & item : request.History)
+            {
+                restoreData.try_emplace(
+                    item.processId,
+                    std::make_tuple(false, MODEL_COMPONENTS::TGameBrain::NONE, TStandartPlayerProcess::THistoryList{})
+                );
+                auto & [isPlayer, brain, history] = restoreData[item.processId];
+                isPlayer = item.player;
+                if(!isPlayer)
+                {
+                    brain = request.BrainsMap.at(item.processId);
+                }
+
+                auto emptyData = std::make_pair(TGameValue<uint8_t>({0,0,0,0}), std::make_pair(0,0));
+                if(history.size() < item.step)
+                {
+                    history.resize(item.step, emptyData);
+                }
+                std::pair<uint32_t, uint32_t> bc = std::make_pair(item.bulls, item.cows);
+                auto gameValue = TGameValue<uint8_t>(item.gameValueList);
+                history[item.step - 1] = {gameValue, bc};
+            }
+            game->restoreGame(secret_value, restoreData);
+            result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
+        }
+        break;
         default:
             result.Result = SERVER_COMPONENTS::TResult::ERROR_UNKNOWN_COMMAND;
             break;

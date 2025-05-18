@@ -19,6 +19,90 @@ TGameController::~TGameController()
 
 }
 
+TGameController::TError TGameController::restoreGame(
+        std::vector<uint8_t> const & secretValue,
+        std::unordered_map<
+            uint32_t,
+            std::tuple<bool, MODEL_COMPONENTS::TGameBrain, TStandartPlayerProcess::THistoryList>
+        >const & processData
+)
+{
+    m_player_list.clear();
+    m_computer_list.clear();
+    m_secretValue = secretValue;
+
+    for (const auto& [processId, data] : processData)
+    {
+        const auto& [isPlayer, brain, history] = data;
+
+        if (isPlayer)
+        {
+            auto error = addPlayerProcess(processId);
+            if (error != TError::OK) return error;
+            PlayerPtrById(processId)->restoreProcess(secretValue, history);
+        } else
+        {
+            auto error = addComputerProcess(processId, brain);
+            if (error != TError::OK) return error;
+            ComputerPtrById(processId)->restoreProcess(secretValue, history);
+        }
+    }
+
+    if (m_secretValue.empty())
+    {
+        m_gameStage = MODEL_COMPONENTS::TGameStage::WAIT_A_NUMBER;
+    }
+    else
+    {
+        uint32_t finishedCount = 0;
+        uint32_t unfinishedCount = 0;
+        for (const auto& [id, process] : m_player_list)
+        {
+            if (process->PlayerState() == MODEL_COMPONENTS::TPlayerState::IN_PROGRESS)
+            {
+                ++unfinishedCount;
+            }
+            else
+            {
+                ++finishedCount;
+            }
+        }
+        for (const auto& [id, process] : m_computer_list)
+        {
+            if (process->PlayerState() == MODEL_COMPONENTS::TPlayerState::IN_PROGRESS)
+            {
+                ++unfinishedCount;
+            }
+            else
+            {
+                ++finishedCount;
+            }
+        }
+
+        m_gameStage = finishedCount == 0
+                ? MODEL_COMPONENTS::TGameStage::IN_PROGRESS
+                : unfinishedCount == 0
+                  ? MODEL_COMPONENTS::TGameStage::FINISHED
+                  : MODEL_COMPONENTS::TGameStage::IN_PROGRESS_WINNER_DEFINED
+            ;
+
+        if (!m_player_list.empty())
+        {
+            m_game_step = m_player_list.begin()->second->AttemptsCount();
+        }
+        else if (!m_computer_list.empty())
+        {
+            m_game_step = m_computer_list.begin()->second->AttemptsCount();
+        }
+        else
+        {
+            m_game_step = 0;
+        }
+    }
+
+    return TError::OK;
+}
+
 uint32_t TGameController::PlayersCount( ) const
 {
     return PlayerList().size() + ComputerList().size();

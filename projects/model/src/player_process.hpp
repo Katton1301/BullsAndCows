@@ -43,6 +43,10 @@ public: //methods
     void makeStep( );
     void giveUp( );
     std::function< uint32_t( uint32_t ) > const & GetRandom() const;
+    void restoreProcess(
+            std::vector<uint8_t> const & secretValue,
+            THistoryList const & history
+    );
 private:
     std::shared_ptr<TStandartBrain> GameBrain_ptr();
 

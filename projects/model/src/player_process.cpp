@@ -107,3 +107,30 @@ std::function< uint32_t( uint32_t ) > const & TStandartPlayerProcess::GetRandom(
 {
     return m_randomFunc;
 }
+
+void TStandartPlayerProcess::restoreProcess( std::vector<uint8_t> const & secretValue, THistoryList const & history )
+{
+    Init();
+    if(secretValue.size() > 0)
+    {
+        setTrueGameValue(TGameValue<uint8_t>(secretValue));
+        setPlayerState(MODEL_COMPONENTS::TPlayerState::WAIT_A_NUMBER);
+        m_historyList = history;
+
+        if (!history.empty())
+        {
+            const auto& lastResult = history.back().second;
+            if (TStandartRules::Instance().isWinResults(lastResult))
+            {
+                setPlayerState(MODEL_COMPONENTS::TPlayerState::FINISHED);
+            } else
+            {
+                setPlayerState(MODEL_COMPONENTS::TPlayerState::IN_PROGRESS);
+            }
+        }
+        if (GameBrain_ptr())
+        {
+            GameBrain_ptr()->restoreFromHistory();
+        }
+    }
+}

@@ -42,9 +42,69 @@ namespace SERVER_COMPONENTS
         {
             request.GameBrain = COMMON_OPERATIONS::LevelNameToGameBrain(doc["game_brain"].GetString());
         }
+
+        if (doc.HasMember("restore_data") && doc["restore_data"].IsArray())
+        {
+            for (auto const & item : doc["restore_data"].GetArray())
+            {
+                MODEL_COMPONENTS::StepResults step_result;
+                if(item.HasMember("game_value") && item.IsUint())
+                {
+                    uint32_t gameValueInt = item["game_value"].GetUint();
+                    std::vector<uint8_t> gameValue;
+                    gameValue.resize(TStandartRules::Instance().ValueSize());
+                    for(int32_t i = TStandartRules::Instance().ValueSize() - 1; i >= 0; --i)
+                    {
+                        gameValue[i] = gameValueInt % 10;
+                        gameValueInt /= 10;
+                    }
+                    step_result.gameValueList = gameValue;
+                }
+                if(item.HasMember("id"))
+                {
+                    step_result.processId = item["id"].GetUint();
+                }
+                if(item.HasMember("player"))
+                {
+                    step_result.player = item["player"].GetBool();
+                }
+                if(item.HasMember("bulls"))
+                {
+                    step_result.bulls = item["bulls"].GetUint();
+                }
+                if(item.HasMember("cows"))
+                {
+                    step_result.cows = item["cows"].GetUint();
+                }
+                if(item.HasMember("step"))
+                {
+                    step_result.step = item["step"].GetUint();
+                }
+                if(item.HasMember("finished"))
+                {
+                    step_result.finished = item["finished"].GetBool();
+                }
+                request.History.push_back(step_result);
+            }
+        }
+
+        if(doc.HasMember("brains") && doc["brains"].IsArray())
+        {
+            for (auto const & item : doc["brains"].GetArray())
+            {
+                if(item.HasMember("id") && item.HasMember("brain"))
+                {
+                    request.BrainsMap.emplace(
+                        item["id"].GetUint(),
+                        COMMON_OPERATIONS::LevelNameToGameBrain(item["brain"].GetString())
+                    );
+                }
+            }
+        }
+
         if (doc.HasMember("game_value"))
         {
-            const rapidjson::Value& gameValueJson = doc["game_value"];
+            rapidjson::Value const & gameValueJson = doc["game_value"];
             std::vector<uint8_t> gameValue;
             if (gameValueJson.IsString())
             {
