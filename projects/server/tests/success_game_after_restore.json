@@ -1,0 +1,135 @@
+[
+    {
+        "number": 1,
+        "request": {
+            "server_id": 1,
+            "command": 1
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1
+        }
+    },
+    {
+        "number": 2,
+        "request": {
+            "server_id": 1,
+            "command": 18,
+            "game_id": 1,
+            "game_value": 4567,
+            "restore_data": [
+                {
+                    "id": 1,
+                    "player": true,
+                    "step": 1,
+                    "bulls": 0,
+                    "cows": 0,
+                    "game_value": 123,
+                    "finished": false
+                },
+                {
+                    "id": 2,
+                    "player": true,
+                    "step": 1,
+                    "bulls": 1,
+                    "cows": 0,
+                    "game_value": 1237,
+                    "finished": false
+                },
+                {
+                    "id": 1,
+                    "player": true,
+                    "step": 2,
+                    "bulls": 2,
+                    "cows": 0,
+                    "game_value": 1267,
+                    "finished": false
+                }
+            ]
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1,
+            "game_stage": "IN_PROGRESS",
+            "game_id": 1
+        }
+    },
+    {
+        "number": 3,
+        "request": {
+            "server_id": 1,
+            "command": 8,
+            "player_id": 2,
+            "game_id": 1,
+            "game_value": 4567
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1,
+            "game_stage": "IN_PROGRESS_WINNER_DEFINED",
+            "game_id": 1,
+            "player_id": 2,
+            "players": 2,
+            "steps": [
+                {
+                    "id": 1,
+                    "player": true,
+                    "step": 2,
+                    "bulls": 2,
+                    "cows": 0,
+                    "game_value": 1267,
+                    "finished": false
+                },
+                {
+                    "id": 2,
+                    "player": true,
+                    "game_value": 4567,
+                    "bulls": 4,
+                    "cows": 0,
+                    "step": 2,
+                    "finished": true
+                }
+            ]
+        }
+    },
+    {
+        "number": 4,
+        "request": {
+            "server_id": 1,
+            "command": 8,
+            "player_id": 1,
+            "game_id": 1,
+            "game_value": 4567
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1,
+            "game_stage": "FINISHED",
+            "game_id": 1,
+            "player_id": 1,
+            "players": 2,
+            "steps": [
+                {
+                    "id": 1,
+                    "player": true,
+                    "game_value": 4567,
+                    "bulls": 4,
+                    "cows": 0,
+                    "step": 3,
+                    "finished": true
+                }
+            ]
+        }
+    },
+    {
+        "number": 5,
+        "request": {
+            "server_id": 1,
+            "command": 3
+        },
+        "result": {
+            "server_id": 1,
+            "result": 1
+        }
+    }
+]

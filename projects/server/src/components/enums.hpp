@@ -102,7 +102,7 @@ namespace SERVER_COMPONENTS
         uint32_t GameId = 0;
         uint32_t ComputerId = 0;
         std::vector< MODEL_COMPONENTS::StepResults > History;
-        std::map< uint32_t , MODEL_COMPONENTS::TGameBrain > BrainsMap;
+        std::map< uint32_t , std::pair< uint32_t, MODEL_COMPONENTS::TGameBrain> > BrainsMap;
         uint32_t Step = 0;
         MODEL_COMPONENTS::TGameBrain GameBrain = MODEL_COMPONENTS::TGameBrain::NONE;
         std::vector<uint8_t> GameValue{};

@@ -86,17 +86,13 @@ TGameController::TError TGameController::restoreGame(
                   : MODEL_COMPONENTS::TGameStage::IN_PROGRESS_WINNER_DEFINED
             ;
 
-        if (!m_player_list.empty())
+        if(!m_player_list.empty())
         {
             m_game_step = m_player_list.begin()->second->AttemptsCount();
         }
-        else if (!m_computer_list.empty())
+        for(auto const & [id, process] : m_player_list)
         {
-            m_game_step = m_computer_list.begin()->second->AttemptsCount();
-        }
-        else
-        {
-            m_game_step = 0;
+            m_game_step = std::min(m_game_step,process->AttemptsCount());
         }
     }
 

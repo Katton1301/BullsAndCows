@@ -75,6 +75,7 @@
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
             "player_id": 1,
+            "unstepped_players": 1,
             "players": 2,
             "steps": [
                 {
@@ -104,7 +105,6 @@
             "game_stage": "IN_PROGRESS_WINNER_DEFINED",
             "game_id": 1,
             "player_id": 2,
-            "place": 1,
             "players": 2,
             "steps": [
                 {
@@ -143,7 +143,6 @@
             "game_stage": "FINISHED",
             "game_id": 1,
             "player_id": 1,
-            "place": 2,
             "players": 2,
             "steps": [
                 {
@@ -258,6 +257,7 @@
             "game_stage": "IN_PROGRESS",
             "game_id": 2,
             "player_id": 1,
+            "unstepped_players": 1,
             "players": 2,
             "steps": [
                 {
@@ -354,7 +354,7 @@
             "game_stage": "IN_PROGRESS",
             "game_id": 2,
             "player_id": 2,
-            "place": 1,
+            "unstepped_players": 1,
             "players": 2,
             "steps": [
                 {
@@ -384,7 +384,6 @@
             "game_stage": "FINISHED",
             "game_id": 2,
             "player_id": 1,
-            "place": 1,
             "players": 2,
             "steps": [
                 {
@@ -423,7 +422,6 @@
             "game_stage": "FINISHED",
             "game_id": 3,
             "player_id": 1,
-            "place": 1,
             "players": 1,
             "steps": [
                 {

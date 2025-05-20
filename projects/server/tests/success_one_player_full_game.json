@@ -113,7 +113,6 @@
             "game_stage": "FINISHED",
             "game_id": 1,
             "player_id": 1,
-            "place": 1,
             "players": 1,
             "steps": [{
                 "id": 1,
@@ -130,7 +129,7 @@
         "number": 7,
         "request": {
             "server_id": 1,
-            "command": 16,
+            "command": 17,
             "player_id": 1,
             "game_id": 1
         },

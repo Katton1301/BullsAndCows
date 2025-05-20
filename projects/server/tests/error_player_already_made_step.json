@@ -75,6 +75,7 @@
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
             "player_id": 1,
+            "unstepped_players": 1,
             "players": 2,
             "steps": [{
                 "id": 1,

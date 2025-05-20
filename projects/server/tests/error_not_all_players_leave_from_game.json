@@ -46,7 +46,7 @@
         "number": 4,
         "request": {
             "server_id": 1,
-            "command": 16,
+            "command": 17,
             "player_id": 1,
             "game_id": 1
         },

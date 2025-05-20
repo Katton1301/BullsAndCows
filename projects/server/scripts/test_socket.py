@@ -64,7 +64,22 @@ def create_message() -> dict:
         'computer_id': ['(Optional)Write Computer Id: ', 'int'],
         'step': ['(Optional)Write step: ', 'int'],
         'game_value': ['(Optional)Write game value: ', 'int'],
-        'game_brain': ['(Optional)Write computer level [Easiest,Easy,Medium,Hard]: ', 'str']
+        'game_brain': ['(Optional)Write computer level [Easiest,Easy,Medium,Hard]: ', 'str'],
+        'restore_data': ['(Optional)Write restore data?[y/N]: ', 'array'],
+        'brains': ['(Optional)Write brains to restore?[y/N]', 'array'],
+    }
+    history_parameters = {
+        'id': ['Write id: ', 'int'],
+        'player': ['Write is player?[t/f]: ', 'bool'],
+        'step': ['Write step: ', 'int'],
+        'bulls': ['Write bulls: ', 'int'],
+        'cows': ['Write cows: ', 'int'],
+        'game_value': ['Write game value: ', 'int'],
+        'finished': ['Write is last step?[t/f]: ', 'bool'],
+    }
+    brain_parameters = {
+        'id': ['Write id: ', 'int'],
+        'brain': ['Write computer level [Easiest,Easy,Medium,Hard]: ', 'str'],
     }
     for name, value in optional_int_parameters.items():
         text = input(value[0])
@@ -74,6 +89,30 @@ def create_message() -> dict:
             break
         if value[1] == 'int':
             msg_dict[name] = int(text)
+        elif value[1] == 'array':
+            if text.lower() == 'n' or text.lower() == 'no':
+                continue
+            msg_dict[name] = []
+            msg_arr = msg_dict[name]
+            parameters = None
+            if name == 'restore_data':
+                parameters = history_parameters
+            else:
+                parameters = brain_parameters
+            while True:
+                inner_dict = dict()
+                for name, value in parameters.items():
+                    text = input(value[0])
+                    if value[1] == 'int':
+                        inner_dict[name] = int(text)
+                    elif value[1] == 'bool':
+                        inner_dict[name] = text.lower() == 't'
+                    else:
+                        inner_dict[name] = text
+                msg_arr.append(inner_dict)
+                msg = input('Add another item?[y/N]: ')
+                if msg != 'y' and msg != 'yes':
+                    break
         else:
             msg_dict[name] = text
     print(f'Message created: {msg_dict}')
@@ -84,6 +123,8 @@ def construct_command( number ) -> dict:
     command_dict["number"] = number
     command_dict["request"] = create_message()
     command_dict["result"] = json.loads(send_message(command_dict["request"]))
+    command_dict['request'].pop('correlation_id')
+    command_dict['result'].pop('correlation_id')
     print(f'Recived: {command_dict["result"]}')
     return command_dict
 

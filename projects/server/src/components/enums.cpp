@@ -300,6 +300,38 @@ namespace SERVER_COMPONENTS
         {
             stream_ << static_cast<uint32_t>(digit) << " ";
         }
+        if(request.History.size() > 0)
+        {
+            stream_ << "History:" << std::endl;
+            for(auto const & history : request.History)
+            {
+                stream_ << "History Step:" << std::endl;
+                stream_ << ((history.player) ? "  player id:" : "computer id:") << history.processId << std::endl;
+                stream_ << "Step: " << history.step << std::endl;
+                stream_ << "Bulls: " << history.bulls << std::endl;
+                stream_ << "Cows: " << history.cows << std::endl;
+                stream_ << "Game Value: " << history.cows << std::endl;
+                for(auto digit : history.gameValueList)
+                {
+                    stream_ << static_cast<uint32_t>(digit) << " ";
+                }
+                if(history.finished)
+                {
+                    stream_ << "Last step" << std::endl;
+                }
+            }
+        }
+        if(request.BrainsMap.size() > 0)
+        {
+            stream_ << "Brains:" << std::endl;
+            for(auto const & [id, data] : request.BrainsMap)
+            {
+                stream_ << "Brain: " << std::endl;
+                stream_ << "Id: " << id << std::endl;
+                stream_ << "Owner id: " << data.first << std::endl;
+                stream_ << "Game Brain: " << data.second << std::endl;
+            }
+        }
         stream_ << std::endl;
         return stream_;
     }

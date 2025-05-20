@@ -23,6 +23,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         std::vector< uint8_t > secretValue{0,1,2,3};
         error = gameController.StartGame(secretValue);
         CHECK( error == TGameController::TError::OK );
+        CHECK( secretValue == gameController.SecretValue() );
         error = gameController.StartGame(secretValue);
         CHECK( error == TGameController::TError::GAME_BUSY );
         CHECK(gameController.GameStage() == MODEL_COMPONENTS::TGameStage::IN_PROGRESS);
@@ -30,6 +31,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         CHECK(gameController.GameStep() == 0);
         CHECK(gameController.PlayerPlace(playerId, true) == 0);
         CHECK(gameController.getStepResults(1).size() == 0);
+        CHECK(gameController.UnsteppedPlayers() == 1);
 
         std::vector< uint8_t > firstValue{4,5,6,7};
         error = gameController.DoPlayerStep(playerId, firstValue);
@@ -41,6 +43,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         CHECK(gameController.GameStep(0, true) == 0);
         CHECK(gameController.GameStep() == 1);
         CHECK(gameController.WinnersId().size() == 0);
+        CHECK(gameController.UnsteppedPlayers(0) == 0);
 
         auto results = gameController.getStepResults(1);
         CHECK(results.size() == 1);
@@ -78,6 +81,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         CHECK(gameController.GameStep() == 0);
         error = gameController.StartGame(secretValue);
         CHECK( error == TGameController::TError::OK );
+        CHECK( secretValue == gameController.SecretValue() );
 
         error = gameController.PlayerGiveUp(playerId);
         CHECK( error == TGameController::TError::OK );
@@ -105,6 +109,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         std::vector< uint8_t > secretValue{0,1,2,3};
         error = gameController.StartGame(secretValue);
         CHECK( error == TGameController::TError::OK );
+        CHECK( secretValue == gameController.SecretValue() );
         CHECK(gameController.PlayerPlace(computerId, false) == 0);
 
         error = gameController.FinishStep();
@@ -113,6 +118,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         CHECK(gameController.GameStep(computerId, false) == 1);
         CHECK(gameController.GameStep(computerId, true) == 0);
         CHECK(gameController.GameStep() == 1);
+        CHECK(gameController.UnsteppedPlayers() == 0);
 
         CHECK(gameController.getStepResults(0).size() == 0);
         auto results = gameController.getStepResults(1);
@@ -153,6 +159,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         std::vector< uint8_t > secretValue{0,1,2,3};
         error = gameController.StartGame(secretValue);
         CHECK( error == TGameController::TError::OK );
+        CHECK( secretValue == gameController.SecretValue() );
         CHECK(gameController.GameStage() == MODEL_COMPONENTS::TGameStage::IN_PROGRESS);
         CHECK(gameController.GameStep(playerId1, true) == 0);
         CHECK(gameController.GameStep(playerId2, true) == 0);
@@ -171,6 +178,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         CHECK(gameController.GameStep(playerId2, true) == 0);
         CHECK(gameController.GameStep() == 0);
         CHECK(gameController.WinnersId().size() == 0);
+        CHECK(gameController.UnsteppedPlayers() == 1);
 
 
         std::vector< uint8_t > firstValue2{5,6,7,8};
@@ -214,6 +222,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         CHECK(gameController.GameStep(playerId2, true) == 1);
         CHECK(gameController.GameStep() == 1);
         CHECK(gameController.WinnersId().size() == 0);
+        CHECK(gameController.UnsteppedPlayers() == 1);
 
         std::vector< uint8_t > secondValue2{6,7,8,9};
         error = gameController.DoPlayerStep(playerId2, secondValue2);
@@ -278,6 +287,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         std::vector< uint8_t > secretValue{0,1,2,3};
         error = gameController.StartGame(secretValue);
         CHECK( error == TGameController::TError::OK );
+        CHECK( secretValue == gameController.SecretValue() );
 
         std::vector< uint8_t > firstValue{4,5,6,7};
         error = gameController.DoPlayerStep(playerId1, firstValue);
@@ -286,6 +296,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         CHECK(gameController.isStepInTransitionStage());
         CHECK(gameController.GameStep() == 0);
         CHECK(gameController.WinnersId().size() == 0);
+        CHECK(gameController.UnsteppedPlayers() == 1);
 
 
         error = gameController.PlayerGiveUp(playerId2);
@@ -295,6 +306,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         CHECK(gameController.GameStep() == 1);
         CHECK(gameController.PlayerPlace(playerId1, true) == 0);
         CHECK(gameController.PlayerPlace(playerId2, true) == 3);
+        CHECK(gameController.UnsteppedPlayers(0) == 0);
 
         auto results = gameController.getStepResults(1);
         CHECK(results.size() == 2);

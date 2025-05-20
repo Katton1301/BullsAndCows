@@ -48,15 +48,19 @@ namespace SERVER_COMPONENTS
             for (auto const & item : doc["restore_data"].GetArray())
             {
                 MODEL_COMPONENTS::StepResults step_result;
-                if(item.HasMember("game_value") && item.IsUint())
+                if(item.HasMember("game_value"))
                 {
-                    uint32_t gameValueInt = item["game_value"].GetUint();
+                    rapidjson::Value const & gameValueJson = item["game_value"];
                     std::vector<uint8_t> gameValue;
-                    gameValue.resize(TStandartRules::Instance().ValueSize());
-                    for(int32_t i = TStandartRules::Instance().ValueSize() - 1; i >= 0; --i)
+                    if(gameValueJson.IsUint())
                     {
-                        gameValue[i] = gameValueInt % 10;
-                        gameValueInt /= 10;
+                        uint32_t gameValueInt = gameValueJson.GetUint();
+                        gameValue.resize(TStandartRules::Instance().ValueSize());
+                        for(int32_t i = TStandartRules::Instance().ValueSize() - 1; i >= 0; --i)
+                        {
+                            gameValue[i] = gameValueInt % 10;
+                            gameValueInt /= 10;
+                        }
                     }
                     step_result.gameValueList = gameValue;
                 }
@@ -92,11 +96,14 @@ namespace SERVER_COMPONENTS
         {
             for (auto const & item : doc["brains"].GetArray())
             {
-                if(item.HasMember("id") && item.HasMember("brain"))
+                if(item.HasMember("id") && item.HasMember("brain") && item.HasMember("player_id"))
                 {
                     request.BrainsMap.emplace(
                         item["id"].GetUint(),
-                        COMMON_OPERATIONS::LevelNameToGameBrain(item["brain"].GetString())
+                        std::make_pair(
+                            item["player_id"].GetUint(),
+                            COMMON_OPERATIONS::LevelNameToGameBrain(item["brain"].GetString())
+                        )
                     );
                 }
             }
