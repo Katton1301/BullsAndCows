@@ -43,6 +43,16 @@ namespace SERVER_COMPONENTS
             request.GameBrain = COMMON_OPERATIONS::LevelNameToGameBrain(doc["game_brain"].GetString());
         }
 
+        if(doc.HasMember("players") && doc["players"].IsArray())
+        {
+            for (auto const & item : doc["players"].GetArray())
+            {
+                uint32_t id = item["id"].GetUint();
+                bool is_host = item["is_host"].GetBool();
+                request.Players[id] = is_host;
+            }
+        }
+
         if (doc.HasMember("restore_data") && doc["restore_data"].IsArray())
         {
             for (auto const & item : doc["restore_data"].GetArray())

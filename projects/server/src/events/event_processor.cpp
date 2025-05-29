@@ -723,49 +723,53 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                     std::tuple<bool, MODEL_COMPONENTS::TGameBrain, TStandartPlayerProcess::THistoryList>
                 >  restoreData;
 
-            bool hostAssigned = false;
-            for( auto const & item : request.History)
+            for( auto [id, is_host] : request.Players)
             {
                 restoreData.try_emplace(
-                    item.processId,
-                    std::make_tuple(false, MODEL_COMPONENTS::TGameBrain::NONE, TStandartPlayerProcess::THistoryList{})
+                    id,
+                    std::make_tuple(true, MODEL_COMPONENTS::TGameBrain::NONE, TStandartPlayerProcess::THistoryList{})
                 );
-                auto & [isPlayer, brain, history] = restoreData[item.processId];
-                isPlayer = item.player;
-                if(!isPlayer)
+                if(!TDataStorage::Instance().isPlayerExists(id))
                 {
-                    brain = request.BrainsMap.at(item.processId).second;
-                    auto player_id = request.BrainsMap.at(item.processId).first;
-                    if(!TDataStorage::Instance().isPlayerExists(player_id))
-                    {
-                        TDataStorage::Instance().createPlayer(player_id);
-                    }
-                    auto & player = TDataStorage::Instance().getPlayer(player_id);
-                    player->addComputer(request.GameId, item.processId);
+                    TDataStorage::Instance().createPlayer(id);
                 }
-                else
+                auto & player = TDataStorage::Instance().getPlayer(id);
+                if(player->GamesCount() >= SERVER_COMPONENTS::PLAYER_GAMES_LIMIT)
                 {
-                    if(!TDataStorage::Instance().isPlayerExists(item.processId))
-                    {
-                        TDataStorage::Instance().createPlayer(item.processId);
-                    }
-                    auto & player = TDataStorage::Instance().getPlayer(item.processId);
-                    if(player->GamesCount() >= SERVER_COMPONENTS::PLAYER_GAMES_LIMIT)
-                    {
-                        TDataStorage::Instance().removeGame(request.GameId);
-                        result.Result = SERVER_COMPONENTS::TResult::ERROR_GAMES_LIMIT_REACHED;
-                        break;
-                    }
-                    if(!player->PlayerInGame(request.GameId))
-                    {
-                        player->addGame(request.GameId, !hostAssigned);
-                    }
-                    if(!hostAssigned)
-                    {
-                        hostAssigned = true;
-                    }
+                    TDataStorage::Instance().removeGame(request.GameId);
+                    result.Result = SERVER_COMPONENTS::TResult::ERROR_GAMES_LIMIT_REACHED;
+                    break;
                 }
+                if(!player->PlayerInGame(request.GameId))
+                {
+                    player->addGame(request.GameId, is_host);
+                }
+            }
+            for( auto const & [id, brainData] : request.BrainsMap)
+            {
+                auto brain = brainData.second;
+                auto player_id = brainData.first;
+                restoreData.try_emplace(
+                    id,
+                    std::make_tuple(false, brain, TStandartPlayerProcess::THistoryList{})
+                );
+                if(!TDataStorage::Instance().isPlayerExists(player_id))
+                {
+                    TDataStorage::Instance().createPlayer(player_id);
+                }
+                auto & player = TDataStorage::Instance().getPlayer(player_id);
+                player->addComputer(request.GameId, id);
+            }
 
+            for( auto const & item : request.History)
+            {
+                if(!restoreData.contains(item.processId))
+                {
+                    TDataStorage::Instance().removeGame(request.GameId);
+                    result.Result = SERVER_COMPONENTS::TResult::ERROR_PLAYER_NOT_FOUND;
+                    break;
+                }
+                auto & history = std::get<2>(restoreData[item.processId]);
                 auto emptyData = std::make_pair(TGameValue<uint8_t>({0,0,0,0}), std::make_pair(0,0));
                 if(history.size() < item.step)
                 {

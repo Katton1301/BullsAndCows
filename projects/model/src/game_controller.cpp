@@ -40,7 +40,8 @@ TGameController::TError TGameController::restoreGame(
             auto error = addPlayerProcess(processId);
             if (error != TError::OK) return error;
             PlayerPtrById(processId)->restoreProcess(secretValue, history);
-        } else
+        }
+        else
         {
             auto error = addComputerProcess(processId, brain);
             if (error != TError::OK) return error;
