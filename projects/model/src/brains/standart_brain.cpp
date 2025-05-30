@@ -77,26 +77,27 @@ void TDecisionTreeBrain::restoreFromHistory()
     m_digitCoins.clear();
     for(uint8_t digit = 0; digit < TStandartRules::Instance().NumbersCount(); ++digit)
     {
-        m_digitCoins.push_back(std::make_pair(digit,TStandartRules::Instance().NumbersCount()));
+        m_digitCoins.push_back(std::make_pair(digit, TStandartRules::Instance().NumbersCount()));
     }
 
-    for (auto const & [value, bc] : history)
+    for (uint32_t i = 0; i < history.size(); ++i)
     {
-        for(uint32_t i = 0; i < value.List().size(); ++i)
+        auto const & gameValue = history[i].first.List();
+        auto bulls = history[i].second.first;
+        auto cows = history[i].second.second;
+        for(uint32_t j = 0; j < gameValue.size(); ++j)
         {
-            auto digit = m_gameNode->Value()[i];
-            auto it = std::find_if(m_digitCoins.begin(), m_digitCoins.end(), [digit](auto const & pair){return pair.first == digit;});
-            assert(it == m_digitCoins.end());
-            it->second = value.List()[i];
+            auto digit = gameValue[j];
+            auto it = std::find_if(m_digitCoins.begin(), m_digitCoins.end(), [digit](auto const & pair)
+            {
+                return pair.first == digit;
+            });
+            assert(it != m_digitCoins.end());
+            it->second = m_gameNode->Value()[j];
         }
-        if (m_gameNode->ContainBullsNCows(bc.first, bc.second))
+        if (i < history.size() - 1)
         {
-            m_gameNode = m_gameNode->ChildsAt(bc.first, bc.second);
-        }
-        else
-        {
-            Init();
-            break;
+            m_gameNode = m_gameNode->ChildsAt(bulls, cows);
         }
     }
 
