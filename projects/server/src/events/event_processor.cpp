@@ -723,6 +723,13 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                     std::tuple<bool, MODEL_COMPONENTS::TGameBrain, TStandartPlayerProcess::THistoryList>
                 >  restoreData;
 
+            if(request.Players.size() == 0)
+            {
+                TDataStorage::Instance().removeGame(request.GameId);
+                result.Result = SERVER_COMPONENTS::TResult::ERROR_PLAYER_NOT_FOUND;
+                break;
+            }
+
             for( auto [id, is_host] : request.Players)
             {
                 restoreData.try_emplace(
