@@ -17,6 +17,16 @@
             "command": 18,
             "game_id": 1,
             "game_value": 4567,
+            "players": [
+                {
+                    "id": 1,
+                    "is_host": true
+                },
+                {
+                    "id": 2,
+                    "is_host": false
+                }
+            ],
             "restore_data": [
                 {
                     "id": 1,
