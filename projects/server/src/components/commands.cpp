@@ -126,9 +126,12 @@ namespace SERVER_COMPONENTS
             if (gameValueJson.IsString())
             {
                 std::string gameString = gameValueJson.GetString();
-                for(uint32_t i = 0; TStandartRules::Instance().ValueSize(); ++i)
+                if(gameString.size() == TStandartRules::Instance().ValueSize())
                 {
-                    gameValue.push_back(gameString[i] - '0');
+                    for(uint32_t i = 0; TStandartRules::Instance().ValueSize(); ++i)
+                    {
+                        gameValue.push_back(gameString[i] - '0');
+                    }
                 }
             }
             else if (gameValueJson.IsArray())
@@ -146,6 +149,10 @@ namespace SERVER_COMPONENTS
                 {
                     gameValue[i] = gameValueInt % 10;
                     gameValueInt /= 10;
+                }
+                if(gameValueInt > 0)
+                {
+                    gameValue.clear();
                 }
             }
             request.GameValue = gameValue;
