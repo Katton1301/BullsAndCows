@@ -512,12 +512,16 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 break;
             }
             auto & game = TDataStorage::Instance().getGame(request.GameId);
+            auto currentStep = game->GameStep(request.PlayerId, true);
             auto error = game->PlayerGiveUp(request.PlayerId);
             if(error != TGameController::TError::OK)
             {
                 result.Result = ConvertGameErrorToServerResult(error);
                 break;
             }
+            result.Players = game->PlayersCount();
+            result.UnsteppedPlayers = game->UnsteppedPlayers(currentStep);
+            result.Steps = game->getStepResults(currentStep + 1);
             result.GameStage = game->GameStage();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }
