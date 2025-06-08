@@ -469,7 +469,23 @@ std::vector<MODEL_COMPONENTS::StepResults> TGameController::getStepResults( uint
                     lastHistoryData.first.List(),
                     lastHistoryData.second.first,
                     lastHistoryData.second.second,
-                    playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED
+                    (playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED) ||
+                    (playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP)
+                }
+            );
+        }
+        else
+        {
+            results.push_back(
+                {
+                    gameId,
+                    true,
+                    playerProcess->AttemptsCount(),
+                    {},
+                    0,
+                    0,
+                    (playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED) ||
+                    (playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP)
                 }
             );
         }
@@ -487,9 +503,25 @@ std::vector<MODEL_COMPONENTS::StepResults> TGameController::getStepResults( uint
                     lastHistoryData.first.List(),
                     lastHistoryData.second.first,
                     lastHistoryData.second.second,
-                    computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED
+                    (computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED) ||
+                    (computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP)
                 }
                 );
+        }
+        else
+        {
+            results.push_back(
+                {
+                    gameId,
+                    true,
+                    computerProcess->AttemptsCount(),
+                    {},
+                    0,
+                    0,
+                    (computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED) ||
+                    (computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP)
+                }
+            );
         }
     }
     return results;
