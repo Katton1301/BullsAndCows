@@ -521,7 +521,7 @@ std::vector<MODEL_COMPONENTS::StepResults> TGameController::getStepResults( uint
             results.push_back(
                 {
                     gameId,
-                    true,
+                    false,
                     computerProcess->AttemptsCount(),
                     {},
                     0,
