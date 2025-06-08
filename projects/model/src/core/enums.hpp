@@ -48,6 +48,7 @@ namespace MODEL_COMPONENTS
         uint32_t bulls = 0;
         uint32_t cows = 0;
         bool finished = false;
+        bool give_up = false;
     };
 
     struct GameResults

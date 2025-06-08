@@ -23,7 +23,7 @@ TGameController::TError TGameController::restoreGame(
         std::vector<uint8_t> const & secretValue,
         std::unordered_map<
             uint32_t,
-            std::tuple<bool, MODEL_COMPONENTS::TGameBrain, TStandartPlayerProcess::THistoryList>
+            std::tuple<bool, bool, MODEL_COMPONENTS::TGameBrain, TStandartPlayerProcess::THistoryList>
         >const & processData
 )
 {
@@ -33,19 +33,27 @@ TGameController::TError TGameController::restoreGame(
 
     for (const auto& [processId, data] : processData)
     {
-        const auto& [isPlayer, brain, history] = data;
+        const auto& [isPlayer, give_up, brain, history] = data;
 
         if (isPlayer)
         {
             auto error = addPlayerProcess(processId);
             if (error != TError::OK) return error;
             PlayerPtrById(processId)->restoreProcess(secretValue, history);
+            if(give_up)
+            {
+                PlayerPtrById(processId)->setPlayerState(MODEL_COMPONENTS::TPlayerState::GAVE_UP);
+            }
         }
         else
         {
             auto error = addComputerProcess(processId, brain);
             if (error != TError::OK) return error;
             ComputerPtrById(processId)->restoreProcess(secretValue, history);
+            if(give_up)
+            {
+                ComputerPtrById(processId)->setPlayerState(MODEL_COMPONENTS::TPlayerState::GAVE_UP);
+            }
         }
     }
 

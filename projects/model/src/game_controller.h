@@ -34,7 +34,7 @@ public:
             std::vector<uint8_t> const & secretValue,
             std::unordered_map<
                 uint32_t,
-                std::tuple<bool, MODEL_COMPONENTS::TGameBrain, TStandartPlayerProcess::THistoryList>
+                std::tuple<bool, bool, MODEL_COMPONENTS::TGameBrain, TStandartPlayerProcess::THistoryList>
             >const & processData
     );
     void InitGame();

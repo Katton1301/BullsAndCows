@@ -98,6 +98,10 @@ namespace SERVER_COMPONENTS
                 {
                     step_result.finished = item["finished"].GetBool();
                 }
+                if(item.HasMember("give_up"))
+                {
+                    step_result.give_up = item["give_up"].GetBool();
+                }
                 request.History.push_back(step_result);
             }
         }

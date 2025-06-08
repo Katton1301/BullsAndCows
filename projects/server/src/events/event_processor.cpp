@@ -724,7 +724,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
             auto secret_value = request.GameValue;
             std::unordered_map<
                     uint32_t,
-                    std::tuple<bool, MODEL_COMPONENTS::TGameBrain, TStandartPlayerProcess::THistoryList>
+                    std::tuple<bool, bool, MODEL_COMPONENTS::TGameBrain, TStandartPlayerProcess::THistoryList>
                 >  restoreData;
 
             if(request.Players.size() == 0)
@@ -738,7 +738,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
             {
                 restoreData.try_emplace(
                     id,
-                    std::make_tuple(true, MODEL_COMPONENTS::TGameBrain::NONE, TStandartPlayerProcess::THistoryList{})
+                    std::make_tuple(true, true, MODEL_COMPONENTS::TGameBrain::NONE, TStandartPlayerProcess::THistoryList{})
                 );
                 if(!TDataStorage::Instance().isPlayerExists(id))
                 {
@@ -762,7 +762,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 auto player_id = brainData.first;
                 restoreData.try_emplace(
                     id,
-                    std::make_tuple(false, brain, TStandartPlayerProcess::THistoryList{})
+                    std::make_tuple(false, true, brain, TStandartPlayerProcess::THistoryList{})
                 );
                 if(!TDataStorage::Instance().isPlayerExists(player_id))
                 {
@@ -780,7 +780,11 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                     result.Result = SERVER_COMPONENTS::TResult::ERROR_PLAYER_NOT_FOUND;
                     break;
                 }
-                auto & history = std::get<2>(restoreData[item.processId]);
+                if(item.give_up)
+                {
+                    std::get<1>(restoreData[item.processId]) = true;
+                }
+                auto & history = std::get<3>(restoreData[item.processId]);
                 auto emptyData = std::make_pair(TGameValue<uint8_t>({0,0,0,0}), std::make_pair(0,0));
                 if(history.size() < item.step)
                 {
