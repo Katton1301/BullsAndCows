@@ -2,20 +2,17 @@
     {
         "number": 1,
         "request": {
-            "correlation_id": "3f0f4f49-e477-4aa0-baf3-d703249525b9",
             "server_id": 1,
             "command": 1
         },
         "result": {
             "server_id": 1,
-            "correlation_id": "3f0f4f49-e477-4aa0-baf3-d703249525b9",
             "result": 1
         }
     },
     {
         "number": 2,
         "request": {
-            "correlation_id": "400ccd71-d7b6-47da-bec1-1a53cdce938e",
             "server_id": 1,
             "command": 4,
             "player_id": 1,
@@ -23,7 +20,6 @@
         },
         "result": {
             "server_id": 1,
-            "correlation_id": "400ccd71-d7b6-47da-bec1-1a53cdce938e",
             "result": 1,
             "game_stage": "WAIT_A_NUMBER",
             "game_id": 1,
@@ -33,7 +29,6 @@
     {
         "number": 3,
         "request": {
-            "correlation_id": "de35edb4-bdf1-4681-9082-041c48c7d915",
             "server_id": 1,
             "command": 5,
             "player_id": 2,
@@ -41,7 +36,6 @@
         },
         "result": {
             "server_id": 1,
-            "correlation_id": "de35edb4-bdf1-4681-9082-041c48c7d915",
             "result": 1,
             "game_stage": "WAIT_A_NUMBER",
             "game_id": 1,
@@ -51,7 +45,6 @@
     {
         "number": 4,
         "request": {
-            "correlation_id": "d38a29d1-8c23-428f-86e0-a6e02e3105f6",
             "server_id": 1,
             "command": 7,
             "player_id": 1,
@@ -60,7 +53,6 @@
         },
         "result": {
             "server_id": 1,
-            "correlation_id": "d38a29d1-8c23-428f-86e0-a6e02e3105f6",
             "result": 1,
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
@@ -71,7 +63,6 @@
     {
         "number": 5,
         "request": {
-            "correlation_id": "6bd2e44c-405a-4b63-908d-89e9a525a8dd",
             "server_id": 1,
             "command": 8,
             "player_id": 1,
@@ -80,7 +71,6 @@
         },
         "result": {
             "server_id": 1,
-            "correlation_id": "6bd2e44c-405a-4b63-908d-89e9a525a8dd",
             "result": 1,
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
@@ -88,6 +78,15 @@
             "players": 2,
             "unstepped_players": 1,
             "steps": [
+                {
+                    "id": 2,
+                    "player": true,
+                    "step": 0,
+                    "bulls": 0,
+                    "cows": 0,
+                    "game_value": 0,
+                    "finished": false
+                },
                 {
                     "id": 1,
                     "player": true,
@@ -103,7 +102,6 @@
     {
         "number": 6,
         "request": {
-            "correlation_id": "62262fa2-2f68-449b-b115-c7c1166d973e",
             "server_id": 1,
             "command": 8,
             "player_id": 2,
@@ -112,7 +110,6 @@
         },
         "result": {
             "server_id": 1,
-            "correlation_id": "62262fa2-2f68-449b-b115-c7c1166d973e",
             "result": 1,
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
@@ -143,7 +140,6 @@
     {
         "number": 7,
         "request": {
-            "correlation_id": "9c931afb-1d5c-44f3-af00-1f378474b88e",
             "server_id": 1,
             "command": 8,
             "player_id": 1,
@@ -152,7 +148,6 @@
         },
         "result": {
             "server_id": 1,
-            "correlation_id": "9c931afb-1d5c-44f3-af00-1f378474b88e",
             "result": 1,
             "game_stage": "IN_PROGRESS",
             "game_id": 1,
@@ -160,6 +155,15 @@
             "players": 2,
             "unstepped_players": 1,
             "steps": [
+                {
+                    "id": 2,
+                    "player": true,
+                    "step": 1,
+                    "bulls": 0,
+                    "cows": 0,
+                    "game_value": 0,
+                    "finished": false
+                },
                 {
                     "id": 1,
                     "player": true,
@@ -175,7 +179,6 @@
     {
         "number": 8,
         "request": {
-            "correlation_id": "d0201606-e15f-497b-920e-8e787728bfcc",
             "server_id": 1,
             "command": 8,
             "player_id": 2,
@@ -184,7 +187,6 @@
         },
         "result": {
             "server_id": 1,
-            "correlation_id": "d0201606-e15f-497b-920e-8e787728bfcc",
             "result": 1,
             "game_stage": "IN_PROGRESS_WINNER_DEFINED",
             "game_id": 1,
@@ -215,7 +217,6 @@
     {
         "number": 9,
         "request": {
-            "correlation_id": "4edc20b5-262c-4786-8c18-4e5aa4561411",
             "server_id": 1,
             "command": 8,
             "player_id": 2,
@@ -224,7 +225,6 @@
         },
         "result": {
             "server_id": 1,
-            "correlation_id": "4edc20b5-262c-4786-8c18-4e5aa4561411",
             "result": 1,
             "game_stage": "FINISHED",
             "game_id": 1,
@@ -239,6 +239,15 @@
                     "cows": 0,
                     "game_value": 4567,
                     "finished": true
+                },
+                {
+                    "id": 1,
+                    "player": true,
+                    "step": 2,
+                    "bulls": 0,
+                    "cows": 0,
+                    "game_value": 0,
+                    "finished": true
                 }
             ]
         }
@@ -246,7 +255,6 @@
     {
         "number": 10,
         "request": {
-            "correlation_id": "4997cb53-4843-46c0-87c6-4f1b21a4c524",
             "server_id": 1,
             "command": 16,
             "player_id": 1,
@@ -254,7 +262,6 @@
         },
         "result": {
             "server_id": 1,
-            "correlation_id": "4997cb53-4843-46c0-87c6-4f1b21a4c524",
             "result": 1,
             "game_id": 1,
             "player_id": 1,
@@ -279,13 +286,11 @@
     {
         "number": 11,
         "request": {
-            "correlation_id": "d27ab6ad-7c08-4854-925c-27f32e7fff49",
             "server_id": 1,
             "command": 3
         },
         "result": {
             "server_id": 1,
-            "correlation_id": "d27ab6ad-7c08-4854-925c-27f32e7fff49",
             "result": 1
         }
     }

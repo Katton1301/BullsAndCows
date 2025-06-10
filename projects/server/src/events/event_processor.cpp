@@ -738,7 +738,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
             {
                 restoreData.try_emplace(
                     id,
-                    std::make_tuple(true, true, MODEL_COMPONENTS::TGameBrain::NONE, TStandartPlayerProcess::THistoryList{})
+                    std::make_tuple(true, false, MODEL_COMPONENTS::TGameBrain::NONE, TStandartPlayerProcess::THistoryList{})
                 );
                 if(!TDataStorage::Instance().isPlayerExists(id))
                 {
@@ -762,7 +762,7 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 auto player_id = brainData.first;
                 restoreData.try_emplace(
                     id,
-                    std::make_tuple(false, true, brain, TStandartPlayerProcess::THistoryList{})
+                    std::make_tuple(false, false, brain, TStandartPlayerProcess::THistoryList{})
                 );
                 if(!TDataStorage::Instance().isPlayerExists(player_id))
                 {

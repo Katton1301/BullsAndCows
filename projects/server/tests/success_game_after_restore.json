@@ -122,10 +122,19 @@
                 {
                     "id": 1,
                     "player": true,
-                    "game_value": 4567,
+                    "step": 3,
                     "bulls": 4,
                     "cows": 0,
-                    "step": 3,
+                    "game_value": 4567,
+                    "finished": true
+                },
+                {
+                    "id": 2,
+                    "player": true,
+                    "step": 2,
+                    "bulls": 0,
+                    "cows": 0,
+                    "game_value": 0,
                     "finished": true
                 }
             ]

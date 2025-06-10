@@ -79,12 +79,21 @@
             "players": 2,
             "steps": [
                 {
-                    "id": 1,
+                    "id": 2,
                     "player": true,
-                    "game_value": 123,
+                    "step": 0,
                     "bulls": 0,
                     "cows": 0,
+                    "game_value": 0,
+                    "finished": false
+                },
+                {
+                    "id": 1,
+                    "player": true,
                     "step": 1,
+                    "bulls": 0,
+                    "cows": 0,
+                    "game_value": 123,
                     "finished": false
                 }
             ]
@@ -207,11 +216,20 @@
                 {
                     "id": 2,
                     "player": true,
-                    "game_value": 4567,
+                    "step": 2,
                     "bulls": 4,
                     "cows": 0,
-                    "step": 2,
+                    "game_value": 4567,
                     "finished": true
+                },
+                {
+                    "id": 1,
+                    "player": true,
+                    "step": 1,
+                    "bulls": 0,
+                    "cows": 0,
+                    "game_value": 0,
+                    "finished": false
                 }
             ]
         }

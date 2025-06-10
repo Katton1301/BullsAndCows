@@ -77,15 +77,26 @@
             "player_id": 1,
             "unstepped_players": 1,
             "players": 2,
-            "steps": [{
-                "id": 1,
-                "player": true,
-                "game_value": 1235,
-                "bulls": 3,
-                "cows": 0,
-                "step": 1,
-                "finished": false
-            }]
+            "steps": [
+                {
+                    "id": 2,
+                    "player": true,
+                    "step": 0,
+                    "bulls": 0,
+                    "cows": 0,
+                    "game_value": 0,
+                    "finished": false
+                },
+                {
+                    "id": 1,
+                    "player": true,
+                    "step": 1,
+                    "bulls": 3,
+                    "cows": 0,
+                    "game_value": 1235,
+                    "finished": false
+                }
+            ]
         }
     },
     {
