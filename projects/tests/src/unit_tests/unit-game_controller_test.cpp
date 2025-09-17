@@ -30,7 +30,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         CHECK(gameController.GameStep(playerId, true) == 0);
         CHECK(gameController.GameStep() == 0);
         CHECK(gameController.PlayerPlace(playerId, true) == 0);
-        CHECK(gameController.getStepResults(1).size() == 0);
+        CHECK(gameController.getStepResults(1).size() == 1);
         CHECK(gameController.UnsteppedPlayers() == 1);
 
         std::vector< uint8_t > firstValue{4,5,6,7};
@@ -309,7 +309,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         CHECK(gameController.UnsteppedPlayers(0) == 0);
 
         auto results = gameController.getStepResults(1);
-        CHECK(results.size() == 2);
+        CHECK(results.size() == 3);
 
         auto res1_it = std::find_if(results.begin(), results.end(), [playerId1](auto const & result ){ return result.processId == playerId1; });
         REQUIRE(res1_it != results.end());
@@ -321,7 +321,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
         CHECK(!res1_it->finished);
 
         auto res2_it = std::find_if(results.begin(), results.end(), [playerId2](auto const & result ){ return result.processId == playerId2; });
-        REQUIRE(res2_it == results.end());
+        REQUIRE(res2_it != results.end());
 
 
         auto res3_it = std::find_if(results.begin(), results.end(), [computerId](auto const & result ){ return result.processId == computerId; });
@@ -337,7 +337,7 @@ TEST_CASE("3. Check game controller", "[standart brain]")
 
         uint32_t lastStep = gameController.GameStep();
         results = gameController.getStepResults(lastStep);
-        CHECK(results.size() == 1);
+        CHECK(results.size() == 3);
         auto compResult = results.back();
         CHECK(compResult.processId == computerId);
         CHECK(!compResult.player);

@@ -33,6 +33,11 @@ def test(test_dict):
             if result[key] != value:
                 print(f'Error: Values of {key} not compare. Value {result[key]} must be {value}. Pack {pack_number}')
                 return False
+
+        for key in result.keys():
+            if key not in test_result:
+                print(f'Error: extra data {key} in results. Pack {pack_number}')
+                return False
         pack_number += 1
     print('Success')
     return True
@@ -45,6 +50,10 @@ def test_process(path):
         with open(os.path.join(path,test_file), 'r') as file:
             loaded_test = json.load(file)
         success_i = test(loaded_test)
+        if not success_i:
+            answer = json.loads(send_message({ 'server_id': 1, 'command': 3, 'correlation_id': str(uuid.uuid4()) })) # close server
+            if answer['result'] != 1:
+                break
         success = success and success_i
     if success:
         print('Test completed successfully')
@@ -57,7 +66,7 @@ def create_message() -> dict:
     msg_dict['correlation_id'] = str(uuid.uuid4())
     msg_dict['server_id'] = int(input('(Required)Write server Id: '))
     msg_dict['command'] = int(input('(Required)Write command Id: '))
-    print('The Folowing parameters are optional. To finish message type 'f'. To skip parameter just press Enter.')
+    print('The Folowing parameters are optional. To finish message type "f". To skip parameter just press Enter.')
     optional_int_parameters = {
         'player_id': ['(Optional)Write Player Id: ', 'int'],
         'game_id': ['(Optional)Write Game Id: ', 'int'],
@@ -120,9 +129,9 @@ def create_message() -> dict:
 
 def construct_command( number ) -> dict:
     command_dict = dict()
-    command_dict["number"] = number
-    command_dict["request"] = create_message()
-    command_dict["result"] = json.loads(send_message(command_dict["request"]))
+    command_dict['number'] = number
+    command_dict['request'] = create_message()
+    command_dict['result'] = json.loads(send_message(command_dict['request']))
     command_dict['request'].pop('correlation_id')
     command_dict['result'].pop('correlation_id')
     print(f'Recived: {command_dict["result"]}')

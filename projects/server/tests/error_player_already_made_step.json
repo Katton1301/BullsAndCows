@@ -85,7 +85,8 @@
                     "bulls": 0,
                     "cows": 0,
                     "game_value": 0,
-                    "finished": false
+                    "finished": false,
+                    "give_up": false
                 },
                 {
                     "id": 1,
@@ -94,7 +95,8 @@
                     "bulls": 3,
                     "cows": 0,
                     "game_value": 1235,
-                    "finished": false
+                    "finished": false,
+                    "give_up": false
                 }
             ]
         }

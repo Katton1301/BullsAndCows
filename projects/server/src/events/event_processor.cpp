@@ -646,9 +646,19 @@ SERVER_COMPONENTS::TResultData TEventProcessor::handleGameCommand( SERVER_COMPON
                 break;
             }
             auto & game = TDataStorage::Instance().getGame(request.GameId);
+            auto playerStep = game->GameStep(request.PlayerId, true);
             game->FinishGame();
             uint32_t lastStep = game->GameStep();
-            result.Steps = game->getStepResults(lastStep);
+            for(uint32_t step = playerStep + 1; step <= lastStep; ++step)
+            {
+                for(auto const & stepReuslt : game->getStepResults(step))
+                {
+                    if(!stepReuslt.player)
+                    {
+                        result.Steps.push_back(stepReuslt);
+                    }
+                }
+            }
             result.GameStage = game->GameStage();
             result.Result = SERVER_COMPONENTS::TResult::COMPLETE;
         }

@@ -219,6 +219,7 @@ namespace SERVER_COMPONENTS
                 step_object.AddMember("cows", step.cows, allocator);
                 step_object.AddMember("game_value", TStandartRules::Instance().gameValueToUint(step.gameValueList), allocator);
                 step_object.AddMember("finished", rapidjson::Value().SetBool(step.finished), allocator);
+                step_object.AddMember("give_up", rapidjson::Value().SetBool(step.give_up), allocator);
                 steps_container.PushBack(step_object, allocator);
             }
             doc.AddMember("steps", steps_container, allocator);

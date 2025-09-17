@@ -435,6 +435,8 @@ MODEL_COMPONENTS::StepResults TGameController::getProcessStepResults( uint32_t _
 {
     MODEL_COMPONENTS::StepResults result;
     result.player = _isPlayer;
+    result.processId = _processId;
+    result.step = _gameStep;
     if(
         _gameStep > 0 && (
             (_isPlayer && PlayerList().contains(_processId)) ||
@@ -442,16 +444,15 @@ MODEL_COMPONENTS::StepResults TGameController::getProcessStepResults( uint32_t _
         )
     )
     {
-        result.processId = _processId;
         auto const & process = _isPlayer ? PlayerCptrById(_processId) : ComputerCptrById(_processId);
+        result.finished = process->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED || process->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP;
+        result.give_up = process->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP;
         if(_gameStep - 1 < process->HistoryList().size())
         {
             auto const & lastHistoryData = process->HistoryList().at(_gameStep - 1);
             result.gameValueList = lastHistoryData.first.List();
             result.bulls = lastHistoryData.second.first;
             result.cows = lastHistoryData.second.second;
-            result.step = _gameStep;
-            result.finished = process->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED;
         }
     }
     return result;
@@ -473,12 +474,15 @@ std::vector<MODEL_COMPONENTS::StepResults> TGameController::getStepResults( uint
                 {
                     gameId,
                     true,
-                    playerProcess->AttemptsCount(),
+                    _gameStep,
                     lastHistoryData.first.List(),
                     lastHistoryData.second.first,
                     lastHistoryData.second.second,
-                    (playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED) ||
-                    (playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP)
+                    (
+                     ((playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP) || (playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED))
+                     && _gameStep == playerProcess->AttemptsCount()
+                    ),
+                    playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP
                 }
             );
         }
@@ -492,8 +496,11 @@ std::vector<MODEL_COMPONENTS::StepResults> TGameController::getStepResults( uint
                     {},
                     0,
                     0,
-                    (playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED) ||
-                    (playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP)
+                    (
+                        (playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP) ||
+                        (playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED)
+                    ),
+                    playerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP
                 }
             );
         }
@@ -507,12 +514,15 @@ std::vector<MODEL_COMPONENTS::StepResults> TGameController::getStepResults( uint
                 {
                     gameId,
                     false,
-                    computerProcess->AttemptsCount(),
+                    _gameStep,
                     lastHistoryData.first.List(),
                     lastHistoryData.second.first,
                     lastHistoryData.second.second,
-                    (computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED) ||
-                    (computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP)
+                    (
+                        ((computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP) || (computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED))
+                        && _gameStep == computerProcess->AttemptsCount()
+                    ),
+                    computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP
                 }
                 );
         }
@@ -526,8 +536,11 @@ std::vector<MODEL_COMPONENTS::StepResults> TGameController::getStepResults( uint
                     {},
                     0,
                     0,
-                    (computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED) ||
-                    (computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP)
+                    (
+                        (computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::FINISHED) ||
+                        (computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP)
+                    ),
+                    computerProcess->PlayerState() == MODEL_COMPONENTS::TPlayerState::GAVE_UP
                 }
             );
         }

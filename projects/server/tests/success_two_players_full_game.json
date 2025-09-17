@@ -85,7 +85,8 @@
                     "bulls": 0,
                     "cows": 0,
                     "game_value": 0,
-                    "finished": false
+                    "finished": false,
+                    "give_up": false
                 },
                 {
                     "id": 1,
@@ -94,7 +95,8 @@
                     "bulls": 0,
                     "cows": 0,
                     "game_value": 123,
-                    "finished": false
+                    "finished": false,
+                    "give_up": false
                 }
             ]
         }
@@ -123,7 +125,8 @@
                     "bulls": 0,
                     "cows": 1,
                     "step": 1,
-                    "finished": false
+                    "finished": false,
+                    "give_up": false
                 },
                 {
                     "id": 1,
@@ -132,7 +135,8 @@
                     "bulls": 0,
                     "cows": 0,
                     "game_value": 123,
-                    "finished": false
+                    "finished": false,
+                    "give_up": false
                 }
             ]
         }
@@ -161,7 +165,8 @@
                     "bulls": 0,
                     "cows": 0,
                     "step": 1,
-                    "finished": false
+                    "finished": false,
+                    "give_up": false
                 }
             ]
         }
@@ -190,7 +195,8 @@
                     "bulls": 0,
                     "cows": 1,
                     "step": 1,
-                    "finished": false
+                    "finished": false,
+                    "give_up": false
                 }
             ]
         }
@@ -220,7 +226,8 @@
                     "bulls": 4,
                     "cows": 0,
                     "game_value": 4567,
-                    "finished": true
+                    "finished": true,
+                    "give_up": false
                 },
                 {
                     "id": 1,
@@ -229,7 +236,8 @@
                     "bulls": 0,
                     "cows": 0,
                     "game_value": 0,
-                    "finished": false
+                    "finished": false,
+                    "give_up": false
                 }
             ]
         }
@@ -247,7 +255,30 @@
             "result": 1,
             "game_stage": "FINISHED",
             "game_id": 1,
-            "player_id": 1
+            "player_id": 1,
+            "players": 2,
+            "steps": [
+                {
+                    "id": 2,
+                    "player": true,
+                    "step": 2,
+                    "bulls": 4,
+                    "cows": 0,
+                    "game_value": 4567,
+                    "finished": true,
+                    "give_up": false
+                },
+                {
+                    "id": 1,
+                    "player": true,
+                    "step": 1,
+                    "bulls": 0,
+                    "cows": 0,
+                    "game_value": 0,
+                    "finished": true,
+                    "give_up": true
+                }
+            ]
         }
     },
     {
@@ -274,7 +305,8 @@
                     "bulls": 4,
                     "cows": 0,
                     "step": 2,
-                    "finished": true
+                    "finished": true,
+                    "give_up": false
                 }
             ]
         }
